@@ -38,6 +38,7 @@ Detalle completo en [`/process/framework.md`](./process/framework.md).
 - *The Mom Test* — Rob Fitzpatrick
 - *Running Lean* — Ash Maurya
 - *Shape Up* — Ryan Singer
+- *Lean Analytics* — Alistair Croll & Benjamin Yoskovitz
 
 ---
 
