@@ -105,6 +105,11 @@ body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-s
   <div class="header">
     <div class="header-eyebrow">Product Manager Framework</div>
     <h1>Feature<br><em>Advisor</em></h1>
+    <div id="forgetKeyWrap" style="display:none;margin-top:0.75rem;">
+      <button onclick="forgetKey()" style="background:none;border:none;font-size:11px;color:var(--text-dim);cursor:pointer;padding:0;letter-spacing:0.05em;font-family:'DM Sans',sans-serif;">
+        Olvidar API key
+      </button>
+    </div>
   </div>
   <div class="progress-wrap">
     <div class="progress-stages" id="progressStages"></div>
@@ -118,6 +123,7 @@ body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-s
 <script>
 const ans = {};
 let cs = 0, cq = 0;
+let lastBrief = null;
 
 // ── DISCOVERY GUIDANCE ───────────────────────────────────────────────────────
 const DISCOVERY = {
@@ -645,6 +651,57 @@ async function callAPI(payload) {
   }
 }
 
+// ── API KEY ──────────────────────────────────────────────────────────────────
+function renderKeyEntry() {
+  document.querySelector('.progress-wrap').style.visibility = 'hidden';
+  const container = document.getElementById('stageContainer');
+  container.innerHTML = '';
+  const div = document.createElement('div');
+  div.style.cssText = 'opacity:0;animation:fadeUp 0.5s ease forwards;';
+  div.innerHTML = `
+    <div style="margin-bottom:1.5rem">
+      <div class="stage-tag">Configuración</div>
+      <p style="font-size:13px;color:var(--text-muted);line-height:1.6;margin-top:0.5rem">
+        Esta herramienta usa la API de Anthropic para generar el Feature Brief.<br>
+        Tu key se guarda solo en esta sesión del navegador y nunca sale de tu dispositivo.
+      </p>
+    </div>
+    <div style="margin-bottom:1.25rem">
+      <div class="output-label" style="margin-bottom:6px">Anthropic API key</div>
+      <input type="password" id="keyInput" class="text-input"
+        style="height:44px;min-height:0;resize:none;"
+        placeholder="sk-ant-api03-...">
+    </div>
+    <div class="nav-row">
+      <button class="btn-next" onclick="saveKey()">Continuar →</button>
+    </div>
+    <p style="margin-top:1rem;font-size:11px;color:var(--text-dim)">
+      Se borra automáticamente al cerrar la pestaña.
+    </p>`;
+  container.appendChild(div);
+  setTimeout(() => document.getElementById('keyInput')?.focus(), 100);
+}
+
+function saveKey() {
+  const val = document.getElementById('keyInput')?.value?.trim();
+  if (!val || !val.startsWith('sk-ant-')) {
+    alert('Ingresá una API key válida de Anthropic (empieza con sk-ant-).');
+    return;
+  }
+  sessionStorage.setItem('fa_api_key', val);
+  document.querySelector('.progress-wrap').style.visibility = 'visible';
+  document.getElementById('forgetKeyWrap').style.display = 'block';
+  renderProgress();
+  renderStage();
+}
+
+function forgetKey() {
+  if (!confirm('¿Borrar la API key de esta sesión?')) return;
+  sessionStorage.removeItem('fa_api_key');
+  document.getElementById('forgetKeyWrap').style.display = 'none';
+  renderKeyEntry();
+}
+
 // ── RENDER ───────────────────────────────────────────────────────────────────
 function renderProgress() {
   const w = document.getElementById('progressStages');
@@ -789,7 +846,7 @@ function selectOption(id, value, el) {
   } else if (existing) { existing.style.display = 'none'; }
 }
 
-function goNext() {
+async function goNext() {
   const stage = STAGES[cs], q = stage.questions[cq];
   if (q.type === 'options' || q.type === 'options_with_unclear') {
     if (!ans[q.id]) { alert('Por favor selecciona una opción antes de continuar.'); return; }
@@ -801,7 +858,11 @@ function goNext() {
   if (cq < stage.questions.length - 1) cq++;
   else { cs++; cq = 0; }
   renderProgress();
-  if (cs >= STAGES.length) { callAPI(buildPayload(ans)); return; }
+  if (cs >= STAGES.length) {
+    const brief = await callAPI(buildPayload(ans));
+    if (brief) renderBriefFromJSON(brief);
+    return;
+  }
   renderStage();
   window.scrollTo({top:0, behavior:'smooth'});
 }
@@ -1092,13 +1153,299 @@ ${cm.map(m=>`- ${m}`).join('\n')}
   a.click(); URL.revokeObjectURL(url);
 }
 
+function pendingFromBrief(brief) {
+  const LABELS = {
+    outcome_esperado:'Outcome esperado', conexion_negocio:'Conexión con el negocio',
+    problema:'Problema — hipótesis a contrastar', riesgo_principal:'Riesgo principal',
+    supuesto_critico:'Supuesto crítico', experimento_minimo:'Experimento mínimo',
+    hipotesis:'Hipótesis', criterio_exito:'Criterio de éxito/fracaso',
+    solucion_propuesta:'Solución propuesta', omtm:'OMTM', benchmark:'Benchmark'
+  };
+  const tasks = [];
+  ['norte','oportunidad','riesgos','validacion','shape','metricas'].forEach(sec => {
+    Object.entries(brief[sec] || {}).forEach(([k, v]) => {
+      if (v && typeof v === 'object' && v.pending)
+        tasks.push({ label: LABELS[k] || k, tarea: v.tarea });
+    });
+  });
+  return tasks;
+}
+
+function renderBriefFromJSON(brief) {
+  lastBrief = brief;
+  const container = document.getElementById('stageContainer');
+  const today = new Date().toLocaleDateString('es-ES',{year:'numeric',month:'long',day:'numeric'});
+  const cm = getCtxMetrics();
+  const pending = pendingFromBrief(brief);
+
+  const fj = val => {
+    if (val && typeof val === 'object' && val.pending)
+      return `<div class="pending-badge">Discovery pendiente</div>${val.tarea?`<div class="pending-task">${val.tarea}</div>`:''}`;
+    return `<div>${val||'—'}</div>`;
+  };
+
+  const pol = brief.norte?.problema_o_solucion;
+  const polLabel = pol==='problema' ? '✓ Problema a resolver'
+                 : pol==='solucion' ? '⚠ Solución — requiere reformulación' : 'Mixto';
+  const notaRef = brief.norte?.nota_reformulacion
+    ? `<div style="margin-top:8px;font-size:13px;color:var(--text-muted);font-style:italic">${brief.norte.nota_reformulacion}</div>`
+    : '';
+
+  const advertSection = brief.advertencias?.length > 0 ? `
+    <div class="output-section" style="border-color:rgba(255,107,107,0.3)">
+      <div class="output-section-header" style="background:rgba(255,107,107,0.06)">
+        <span class="output-section-tag" style="color:var(--danger)">Revisión</span>
+        <span class="output-section-title">Advertencias de calidad</span>
+      </div>
+      <div class="output-section-body">
+        ${brief.advertencias.map(a=>`
+          <div class="output-row">
+            <div class="output-label">${a.campo}</div>
+            <div class="alert alert-warning" style="margin:0">${a.texto}</div>
+          </div>`).join('')}
+      </div>
+    </div>` : '';
+
+  const pendingSection = pending.length > 0 ? `
+    <div class="output-section" style="border-color:rgba(255,201,107,0.3)">
+      <div class="output-section-header" style="background:rgba(255,201,107,0.06)">
+        <span class="output-section-tag" style="color:var(--warning)">Discovery</span>
+        <span class="output-section-title">Trabajo pendiente antes de construir</span>
+      </div>
+      <div class="output-section-body">
+        ${pending.map(p=>`
+          <div class="output-row">
+            <div class="output-label">${p.label}</div>
+            <div class="pending-task">${p.tarea}</div>
+          </div>`).join('')}
+      </div>
+    </div>` : '';
+
+  const div = document.createElement('div');
+  div.className = 'output'; div.id = 'outputDoc';
+  div.innerHTML = `
+    <div style="margin-bottom:2rem">
+      <div class="stage-tag">Feature Brief</div>
+      <div class="output-title">${brief.feature_name||'Feature Brief'}</div>
+      <div class="output-meta">${today}${pending.length>0?' · '+pending.length+' punto(s) de discovery pendiente':''}</div>
+    </div>
+    ${advertSection}${pendingSection}
+    <div class="output-section">
+      <div class="output-section-header"><span class="output-section-tag">01</span><span class="output-section-title">Contexto</span></div>
+      <div class="output-section-body">
+        <div class="output-row"><div class="output-label">Etapa</div><div>${brief.contexto?.etapa||'—'}</div></div>
+        <div class="output-row"><div class="output-label">Modelo</div><div>${brief.contexto?.modelo||'—'}</div></div>
+        <div class="output-row"><div class="output-label">Área</div><div>${brief.contexto?.area||'—'}</div></div>
+      </div>
+    </div>
+    <div class="output-section">
+      <div class="output-section-header"><span class="output-section-tag">02</span><span class="output-section-title">Norte</span><span class="output-section-source">Seiden · Cagan</span></div>
+      <div class="output-section-body">
+        <div class="output-row"><div class="output-label">Outcome esperado</div>${fj(brief.norte?.outcome_esperado)}</div>
+        <div class="output-row"><div class="output-label">Conexión con negocio</div>${fj(brief.norte?.conexion_negocio)}</div>
+        <div class="output-row"><div class="output-label">¿Problema o solución?</div><div>${polLabel}${notaRef}</div></div>
+      </div>
+    </div>
+    <div class="output-section">
+      <div class="output-section-header"><span class="output-section-tag">03</span><span class="output-section-title">Oportunidad — punto de partida para investigar</span><span class="output-section-source">Torres · Fitzpatrick</span></div>
+      <div class="output-section-body">
+        <div class="output-row"><div class="output-label">Problema (hipótesis a contrastar)</div>${fj(brief.oportunidad?.problema)}</div>
+        <div class="output-row"><div class="output-label">Preguntas para investigar</div><div>${brief.oportunidad?.preguntas_investigacion||'—'}</div></div>
+        <div class="output-row"><div class="output-label">Validación actual de la hipótesis</div><div>${brief.oportunidad?.evidencia_actual||'—'}</div></div>
+      </div>
+    </div>
+    <div class="output-section">
+      <div class="output-section-header"><span class="output-section-tag">04</span><span class="output-section-title">Riesgos</span><span class="output-section-source">Cagan · Maurya</span></div>
+      <div class="output-section-body">
+        <div class="risk-row"><span>Valor — ¿lo querrán?</span>${rb(brief.riesgos?.valor)}</div>
+        <div class="risk-row"><span>Usabilidad — ¿sabrán usarlo?</span>${rb(brief.riesgos?.usabilidad)}</div>
+        <div class="risk-row"><span>Factibilidad — ¿podemos construirlo?</span>${rb(brief.riesgos?.factibilidad)}</div>
+        <div class="risk-row"><span>Viabilidad — ¿tiene sentido ahora?</span>${rb(brief.riesgos?.viabilidad)}</div>
+        <div class="output-row" style="margin-top:12px"><div class="output-label">Riesgo principal</div>${fj(brief.riesgos?.riesgo_principal)}</div>
+        ${brief.riesgos?.lectura?`<div class="output-row"><div class="output-label">Lectura del perfil</div><div style="font-size:13px;color:var(--text-muted);font-style:italic">${brief.riesgos.lectura}</div></div>`:''}
+      </div>
+    </div>
+    <div class="output-section">
+      <div class="output-section-header"><span class="output-section-tag">05</span><span class="output-section-title">Validación</span><span class="output-section-source">Maurya · Torres</span></div>
+      <div class="output-section-body">
+        <div class="output-row"><div class="output-label">Supuesto crítico</div>${fj(brief.validacion?.supuesto_critico)}</div>
+        <div class="output-row"><div class="output-label">Experimento mínimo</div>${fj(brief.validacion?.experimento_minimo)}</div>
+        <div class="output-row"><div class="output-label">Hipótesis</div>${fj(brief.validacion?.hipotesis)}</div>
+        <div class="output-row"><div class="output-label">Criterio éxito / fracaso</div>${fj(brief.validacion?.criterio_exito)}</div>
+      </div>
+    </div>
+    <div class="output-section">
+      <div class="output-section-header"><span class="output-section-tag">06</span><span class="output-section-title">Shape — el pitch</span><span class="output-section-source">Singer</span></div>
+      <div class="output-section-body">
+        <div class="output-row"><div class="output-label">Appetite</div><div>${brief.shape?.appetite||'—'}</div></div>
+        <div class="output-row"><div class="output-label">Solución propuesta</div>${fj(brief.shape?.solucion_propuesta)}</div>
+        <div class="output-row"><div class="output-label">Fuera del alcance</div><div>${brief.shape?.fuera_alcance||'—'}</div></div>
+        <div class="output-row"><div class="output-label">Rabbit holes</div><div>${brief.shape?.rabbit_holes||'—'}</div></div>
+      </div>
+    </div>
+    <div class="output-section">
+      <div class="output-section-header"><span class="output-section-tag">07</span><span class="output-section-title">Métricas</span><span class="output-section-source">Lean Analytics · Seiden</span></div>
+      <div class="output-section-body">
+        <div class="output-row"><div class="output-label">OMTM</div>${fj(brief.metricas?.omtm)}</div>
+        <div class="output-row"><div class="output-label">Benchmark</div>${fj(brief.metricas?.benchmark)}</div>
+        <div class="output-row"><div class="output-label">Vanity metric a evitar</div><div>${brief.metricas?.vanity_check||'—'}</div></div>
+        <div class="output-row"><div class="output-label">Métricas recomendadas — ${brief.contexto?.etapa} + ${brief.contexto?.modelo}</div><div style="margin-top:6px">${cm.map(m=>`<span class="metric-chip">${m}</span>`).join('')}</div></div>
+      </div>
+    </div>
+    <div class="download-row">
+      <button class="btn-download" onclick="downloadBriefDoc()">Descargar como Markdown</button>
+      <button class="btn-restart" onclick="restart()">Nueva feature</button>
+    </div>`;
+
+  container.innerHTML = '';
+  container.appendChild(div);
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function downloadBriefDoc() {
+  if (!lastBrief) return;
+  const b = lastBrief;
+  const today = new Date().toLocaleDateString('es-ES');
+  const cm = getCtxMetrics();
+  const fmd = val => (val && typeof val === 'object' && val.pending)
+    ? `⚠ Discovery pendiente: ${val.tarea||''}` : (val||'—');
+  const pol = b.norte?.problema_o_solucion;
+  const polMd = pol==='problema'?'Problema a resolver':pol==='solucion'?'Solución — requiere reformulación':'Mixto';
+  const notaRefMd = b.norte?.nota_reformulacion ? `\n*Reformulación: ${b.norte.nota_reformulacion}*` : '';
+  const advertMd = b.advertencias?.length > 0
+    ? `## Advertencias de calidad\n\n${b.advertencias.map(a=>`- **${a.campo}:** ${a.texto}`).join('\n')}\n\n---\n\n` : '';
+
+  const md =
+`# Feature Brief — ${b.feature_name||'Feature'}
+
+**Fecha:** ${today}
+**Estado:** ${b.estado==='listo_para_desarrollo'?'Listo para desarrollo':'Discovery en curso'}
+
+---
+
+${advertMd}## 01 — Contexto
+
+- **Etapa:** ${b.contexto?.etapa||'—'}
+- **Modelo:** ${b.contexto?.modelo||'—'}
+- **Área:** ${b.contexto?.area||'—'}
+
+---
+
+## 02 — Norte
+*Seiden · Cagan*
+
+**Outcome esperado:**
+${fmd(b.norte?.outcome_esperado)}
+
+**Conexión con el negocio:**
+${fmd(b.norte?.conexion_negocio)}
+
+**¿Problema o solución?** ${polMd}${notaRefMd}
+
+---
+
+## 03 — Oportunidad
+*Torres · Fitzpatrick*
+
+**Problema (hipótesis a contrastar):**
+${fmd(b.oportunidad?.problema)}
+
+**Preguntas para investigar:**
+${b.oportunidad?.preguntas_investigacion||'—'}
+
+**Validación actual de la hipótesis:** ${b.oportunidad?.evidencia_actual||'—'}
+
+---
+
+## 04 — Riesgos
+*Cagan · Maurya*
+
+| Riesgo | Nivel |
+|--------|-------|
+| Valor | ${b.riesgos?.valor||'—'} |
+| Usabilidad | ${b.riesgos?.usabilidad||'—'} |
+| Factibilidad | ${b.riesgos?.factibilidad||'—'} |
+| Viabilidad | ${b.riesgos?.viabilidad||'—'} |
+
+**Riesgo principal:** ${fmd(b.riesgos?.riesgo_principal)}
+
+${b.riesgos?.lectura?`*${b.riesgos.lectura}*`:''}
+
+---
+
+## 05 — Validación
+*Maurya · Torres*
+
+**Supuesto crítico:**
+${fmd(b.validacion?.supuesto_critico)}
+
+**Experimento mínimo:**
+${fmd(b.validacion?.experimento_minimo)}
+
+**Hipótesis:**
+${fmd(b.validacion?.hipotesis)}
+
+**Criterio éxito / fracaso:**
+${fmd(b.validacion?.criterio_exito)}
+
+---
+
+## 06 — Shape
+*Singer (Shape Up)*
+
+**Appetite:** ${b.shape?.appetite||'—'}
+
+**Solución propuesta:**
+${fmd(b.shape?.solucion_propuesta)}
+
+**Fuera del alcance:**
+${b.shape?.fuera_alcance||'—'}
+
+**Rabbit holes:**
+${b.shape?.rabbit_holes||'—'}
+
+---
+
+## 07 — Métricas
+*Lean Analytics · Seiden*
+
+**OMTM:**
+${fmd(b.metricas?.omtm)}
+
+**Benchmark:**
+${fmd(b.metricas?.benchmark)}
+
+**Vanity metric a evitar:**
+${b.metricas?.vanity_check||'—'}
+
+**Métricas recomendadas (${b.contexto?.etapa} + ${b.contexto?.modelo}):**
+${cm.map(m=>`- ${m}`).join('\n')}
+
+---
+*PM Feature Advisor — basado en Torres, Cagan, Seiden, Fitzpatrick, Maurya, Singer y Lean Analytics.*`;
+
+  const blob = new Blob([md],{type:'text/markdown'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href=url;
+  a.download=(b.feature_name||'feature').toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'')+'-brief.md';
+  a.click(); URL.revokeObjectURL(url);
+}
+
 function restart() {
   Object.keys(ans).forEach(k=>delete ans[k]);
+  lastBrief = null;
   cs=0; cq=0; renderProgress(); renderStage();
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
-renderProgress(); renderStage();
+if (sessionStorage.getItem('fa_api_key')) {
+  document.getElementById('forgetKeyWrap').style.display = 'block';
+  renderProgress();
+  renderStage();
+} else {
+  renderKeyEntry();
+}
 </script>
 </body>
 </html>
