@@ -152,16 +152,6 @@ const DISCOVERY = {
     ],
     note: "Una entrevista entusiasta no es señal. El patrón aparece en la repetición."
   },
-  patron: {
-    title: "Falta evidencia suficiente del patrón",
-    why: "Torres: 1–2 entrevistas generan hipótesis, no evidencia. Necesitas al menos 3–5 conversaciones que confirmen el mismo problema antes de avanzar.",
-    steps: [
-      { n: "1", t: "Haz más entrevistas hasta tener al menos 5 conversaciones con usuarios del mismo segmento." },
-      { n: "2", t: "Construye el Opportunity Solution Tree (OST): agrupa los problemas mencionados por categoría y busca cuáles aparecen más veces." },
-      { n: "3", t: "Anota textualmente lo que dijeron los usuarios — sus palabras exactas, no tu interpretación." }
-    ],
-    note: "Si no tienes el patrón, tienes suposiciones. Sigue entrevistando antes de avanzar."
-  },
   supuesto_critico: {
     title: "Falta identificar el supuesto más arriesgado",
     why: "Torres y Maurya: toda solución descansa sobre supuestos. El más peligroso es el que, si es falso, tumba toda la feature. Identificarlo es el primer paso antes de cualquier experimento.",
@@ -234,6 +224,8 @@ function getSugg(qid) {
       activation_stickiness: ["El 50% de usuarios activan la feature principal en su primera semana", "Los usuarios que completan el onboarding tienen un churn 30% menor en el primer mes", "El tiempo hasta la primera acción clave baja de X a Y minutos"],
       retention_any: ["Los usuarios vuelven al producto al menos 3 veces por semana durante el primer mes", "La retención en día 7 sube al menos 10 puntos porcentuales", "Los usuarios que usan esta feature tienen un churn 40% menor"],
       revenue_any: ["Los usuarios que completan este flujo convierten a pago a una tasa 25% mayor", "El tiempo hasta la primera compra se reduce de X días a Y días", "El ticket medio de usuarios que pasan por este flujo es un 15% superior"],
+      referral_any: ["Los usuarios actuales invitan al menos a 1 persona nueva durante su primer mes", "El X% de los nuevos registros llega a través de la referencia de un usuario existente", "Los usuarios que refieren a otros muestran una retención significativamente mayor que los que no"],
+      acquisition_any: ["El X% de quienes llegan por [canal] completa el registro, frente al Y% actual", "El costo de adquisición por [canal] baja de X a Y", "Los usuarios que llegan por [canal] activan a una tasa igual o mayor que los que llegan por otras vías"],
       default: ["Los nuevos usuarios completan la acción clave dentro de las primeras 24h sin ayuda", "Los usuarios regresan al producto al menos 2 veces por semana durante el primer mes", "El X% de usuarios percibe el valor antes de que expire el periodo de prueba"]
     },
     negocio: {
@@ -245,9 +237,19 @@ function getSugg(qid) {
     problema_resumen: {
       activation_any: ["Los usuarios se registran pero no llegan al primer momento de valor — el 'aha moment'", "El onboarding tiene demasiados pasos y los usuarios abandonan antes de ver el beneficio", "Los usuarios no entienden para qué sirve el producto en los primeros 2 minutos"],
       retention_any: ["Los usuarios activan el producto pero no regresan después del primer uso", "No hay un gancho que traiga a los usuarios de vuelta — el producto no forma hábito", "Los usuarios usan el producto una vez pero no ven razón para volver"],
+      referral_any: ["Los usuarios están satisfechos pero no encuentran un motivo claro para invitar a otros", "Compartir el producto es complicado o poco visible dentro del flujo actual", "Los usuarios recomiendan de palabra, pero no usan ningún mecanismo dentro del producto"],
+      revenue_any: ["Los usuarios usan el producto pero no ven motivo suficiente para pagar o gastar más", "El paso de gratis a pago tiene fricción o no queda claro qué se gana al pagar", "Los usuarios comparan el precio con alternativas y no perciben el valor diferencial"],
+      acquisition_any: ["Los usuarios llegan al producto pero no entienden la propuesta de valor antes de irse", "El canal de adquisición trae usuarios que no encajan con el producto y abandonan rápido", "El costo de traer un nuevo usuario es más alto de lo que el negocio puede sostener"],
       default: ["Los usuarios no entienden qué deben hacer después de registrarse y abandonan", "Los usuarios llegan al producto pero no encuentran el valor antes de que se agote su paciencia", "Los usuarios saben que el producto existe pero no lo convierten en hábito"]
     },
-    patron: { default: ["4 de 5 usuarios mencionaron el mismo punto de abandono en el flujo", "Todos los entrevistados expresaron confusión en el mismo paso sin que se lo preguntáramos", "El problema apareció espontáneamente en 3 entrevistas de contextos distintos"] },
+    preguntas_investigacion: {
+      activation_any: ["¿En qué momento sintieron que el producto les aportó algo de valor por primera vez?", "¿Qué casi los hizo abandonar antes de llegar a ese momento?", "¿Qué esperaban encontrar al registrarse, y qué encontraron en realidad?"],
+      retention_any: ["¿Qué los trae de vuelta al producto — o qué hace que se olviden de él?", "Cuéntame de la última vez que volviste a usarlo: ¿qué te hizo regresar?", "¿Qué hacían antes de tener este producto, y qué pasaría si dejaran de usarlo?"],
+      referral_any: ["Cuéntame de alguna vez que le hayas mencionado este producto a alguien — ¿qué dijiste exactamente?", "¿Qué tendría que pasar para que se sintieran cómodos recomendándolo?", "¿Qué ganarían ellos, o la persona a quien refieren, al compartirlo?"],
+      revenue_any: ["Cuéntame de la última vez que decidiste pagar por algo parecido — ¿qué te convenció?", "¿Con qué comparan el valor de este producto al momento de evaluar el precio?", "¿Qué tendría que ofrecer el producto para que pagar les pareciera obvio?"],
+      acquisition_any: ["¿Cómo llegaron al producto la primera vez, y qué esperaban encontrar?", "Cuéntame qué casi te hace no probarlo — ¿qué dudas tenías?", "¿Qué te hizo confiar lo suficiente como para darle una oportunidad?"],
+      default: ["Cuéntame de la última vez que se toparon con este problema — ¿qué hicieron?", "¿Qué probaron antes de esto, y por qué no les funcionó?", "¿Qué tendría que pasar para que esto les importara justo ahora?"]
+    },
     supuesto_critico: {
       valor_alto: ["Suponemos que los usuarios perciben valor en esta feature — no tenemos evidencia directa", "Suponemos que este problema es prioritario para los usuarios — puede haber otros más urgentes", "Suponemos que nuestra solución resuelve el problema real — quizás hay soluciones más simples"],
       usabilidad_alto: ["Suponemos que los usuarios entenderán la interfaz sin instrucciones — no lo hemos testeado", "Suponemos que el flujo es intuitivo — nadie ha intentado usarlo sin guía todavía", "Suponemos que los usuarios sabrán qué hacer en el paso más complejo del flujo"],
@@ -267,6 +269,9 @@ function getSugg(qid) {
     solucion_propuesta: {
       activation_any: ["Una pantalla de bienvenida que muestra el único paso más importante para empezar", "Un tour interactivo de 3 pasos que lleva al usuario directamente al 'aha moment'", "Un checklist de activación visible hasta que el usuario completa las acciones clave"],
       retention_any: ["Una notificación contextual que recuerda al usuario la acción que dejó incompleta", "Un resumen semanal del progreso del usuario para crear el hábito de volver", "Un módulo 'dónde lo dejaste' que reduce la fricción de retomar el producto"],
+      referral_any: ["Un programa de referidos con un incentivo claro tanto para quien invita como para quien se une", "Un mecanismo para compartir integrado justo en el momento de mayor satisfacción del usuario", "Un mensaje o página que el usuario pueda reenviar fácilmente a alguien con el mismo problema"],
+      revenue_any: ["Una comparación clara de planes en el momento en que el usuario siente el límite del actual", "Un upgrade contextual que aparece cuando el usuario está a punto de necesitar más", "Una prueba guiada de la función premium en el momento de mayor uso del plan gratuito"],
+      acquisition_any: ["Una landing page enfocada en un único mensaje de valor para el canal principal", "Un onboarding adaptado a la expectativa que trae el usuario según su canal de origen", "Una campaña dirigida a un segmento específico con un mensaje adaptado a su contexto"],
       default: ["Una pantalla post-registro con los 3 pasos más importantes para llegar al primer valor", "Un flujo de onboarding de 3 pasos con progreso visible que termina en el primer valor percibido", "Un email de activación a las 24h si el usuario no ha completado la acción clave"]
     },
     fuera_alcance: { default: ["No incluye personalización avanzada en esta versión", "No incluye notificaciones push ni email en v1", "No incluye analytics de uso interno para el equipo en esta versión", "No incluye integración con herramientas externas"] },
@@ -318,12 +323,12 @@ const STAGES = [
         { value:"media", label:"Media / contenido", note:"Engagement sobre tráfico bruto" },
         { value:"ugc", label:"UGC (contenido generado por usuarios)", note:"Ratio creadores vs. consumidores" }
       ]},
-      { id:"area", text:"¿En qué área del producto entra esta feature?", hint:"AARRR — el embudo de Maurya. Cada área tiene métricas y riesgos distintos.", type:"options", options:[
-        { value:"acquisition", label:"Adquisición", note:"Atraer nuevos usuarios al producto" },
-        { value:"activation", label:"Activación", note:"Que el usuario perciba el primer valor — el momento 'aha'" },
-        { value:"retention", label:"Retención", note:"Que los usuarios vuelvan a usar el producto" },
-        { value:"revenue", label:"Revenue", note:"Conversión a pago o monetización" },
-        { value:"referral", label:"Referral", note:"Crecimiento orgánico a través de usuarios actuales" }
+      { id:"area", text:"¿Dónde está el producto hoy frente al usuario, y qué quieres conseguir con esta feature?", hint:"AARRR — el embudo de Maurya. Elige la etapa del recorrido que esta feature busca mover. Tu respuesta determina qué preguntas y métricas te proponemos después.", type:"options", options:[
+        { value:"acquisition", label:"Atraer — quiero que lleguen más usuarios nuevos", note:"El producto aún no los tiene en la puerta" },
+        { value:"activation", label:"Activar — quiero que perciban el valor por primera vez", note:"Llegan, pero no llegan al momento 'aha'" },
+        { value:"retention", label:"Retener — quiero que vuelvan a usarlo", note:"Lo prueban, pero no vuelven" },
+        { value:"revenue", label:"Monetizar — quiero que paguen o gasten más", note:"Lo usan, pero no convierten en ingreso" },
+        { value:"referral", label:"Referir — quiero que inviten a otros", note:"Están satisfechos, pero no lo comparten" }
       ]}
     ]
   },
@@ -340,18 +345,12 @@ const STAGES = [
   },
   { id:"oportunidad", tag:"Etapa 3 — Oportunidad", source:"Torres · Fitzpatrick",
     questions:[
-      { id:"problema_resumen", text:"¿Qué necesidad, dolor o deseo de usuarios reales sustenta esta oportunidad?", hint:"Torres: las oportunidades vienen de entrevistas, no de suposiciones.", type:"text_with_suggestions", placeholder:"Describe el problema real del usuario...", discoveryKey:"problema_resumen" },
-      { id:"entrevistas_tipo", text:"¿Las entrevistas preguntaron sobre vida real pasada o sobre lo que harían en el futuro?", hint:"Mom Test: las preguntas sobre el futuro generan falsos positivos. Solo cuenta lo que ya hicieron.", type:"options", options:[
-        { value:"pasado", label:"Sobre experiencias reales pasadas", note:"Esos datos son confiables" },
-        { value:"futuro", label:"Sobre lo que harían en el futuro", note:"Datos hipotéticos — no son evidencia válida" },
-        { value:"mixto", label:"Mezcla de ambos", note:"Separa mentalmente qué aprendiste de cada tipo" },
-        { value:"ninguna", label:"Todavía no he hecho entrevistas", note:"Este es el trabajo que falta antes de avanzar" }
-      ]},
-      { id:"patron", text:"¿Cuántas conversaciones confirman el patrón? ¿Qué se repitió?", hint:"Torres: el patrón aparece en la repetición. Mínimo 3–5 conversaciones.", type:"text_with_suggestions", placeholder:"Describe qué se repitió y cuántas veces...", discoveryKey:"patron" },
-      { id:"compromisos", text:"¿Algún usuario mostró compromiso real más allá de palabras?", hint:"Fitzpatrick: el compromiso real es tiempo, dinero o reputación. 'Me encanta' no cuenta.", type:"options", options:[
-        { value:"si", label:"Sí — hubo compromiso concreto", note:"Fuerte señal de que el problema es real y prioritario" },
-        { value:"no", label:"No — solo comentarios positivos", note:"Posible falso positivo — considera más entrevistas" },
-        { value:"pendiente", label:"Todavía no lo he pedido", note:"En la próxima entrevista cierra siempre con un siguiente paso concreto" }
+      { id:"problema_resumen", text:"¿Qué problema o necesidad del usuario crees que resuelve esta feature?", hint:"Descríbelo como tu mejor hipótesis hoy — aunque no la hayas confirmado todavía. Esto es lo que el product designer va a ir a contrastar con usuarios reales.", type:"text_with_suggestions", placeholder:"Describe la situación real del usuario, no una suposición genérica...", discoveryKey:"problema_resumen" },
+      { id:"preguntas_investigacion", text:"¿Qué preguntas necesita responder el product designer al hablar con usuarios?", hint:"Esto es lo que arranca la investigación — no hace falta tener ya las respuestas. Mom Test: pregunta por su vida real pasada, no por lo que harían en el futuro.", type:"text_with_suggestions", placeholder:"Ej: ¿Qué hicieron la última vez que se toparon con este problema?...", discoveryKey:null },
+      { id:"evidencia_actual", text:"¿Qué tan respaldada está esta hipótesis hoy?", hint:"Sé honesta — esto le dice al equipo cuánto peso darle a la hipótesis mientras se investiga.", type:"options", options:[
+        { value:"validada", label:"Ya hablé con usuarios y vi este problema repetirse", note:"Buen punto de partida — el designer puede profundizar desde ahí" },
+        { value:"parcial", label:"Tengo señales indirectas (datos, soporte, feedback) pero no conversaciones directas", note:"Útil como pista — falta contrastarlo con usuarios" },
+        { value:"hipotesis", label:"Es una intuición del equipo — todavía no lo hemos hablado con usuarios", note:"Está bien partir de aquí, para eso es la investigación" }
       ]}
     ]
   },
@@ -413,6 +412,238 @@ const STAGES = [
     ]
   }
 ];
+
+// ── SYSTEM PROMPT ─────────────────────────────────────────────────────────────
+const SYSTEM_PROMPT = `Sos un product manager senior con dominio profundo de Torres (Continuous Discovery Habits), Cagan (Inspired), Seiden (Outcomes Over Output), Fitzpatrick (The Mom Test), Singer (Shape Up), Maurya (Running Lean) y Croll & Yoskovitz (Lean Analytics).
+
+Tu trabajo es recibir las respuestas de un PM a un cuestionario estructurado y generar un Feature Brief con criterio propio. No transcribís las respuestas — las evaluás, las tensás donde es necesario, y producís un documento que sirva como base real para tomar decisiones de producto. Escribís en español.
+
+## Criterio de calidad
+
+**Outcomes:** Un outcome válido describe un cambio observable en el comportamiento del usuario y una métrica que lo captura. Formato esperado: "[Quién] hará [comportamiento] lo que resultará en [métrica]." Si el outcome describe lo que se construirá en lugar de lo que cambiará en el usuario, es un output — señalalo como advertencia.
+
+**Supuestos críticos:** Un supuesto válido es específico y falseable. Si es falso, la solución se cae. "Que los usuarios quieran usarlo" no es un supuesto — es una esperanza. Un supuesto válido tiene este nivel de especificidad: "Suponemos que los usuarios entienden el paso 3 sin instrucciones — no lo hemos testeado con nadie externo al equipo."
+
+**Hipótesis:** Una hipótesis válida tiene la estructura "Si hacemos X, entonces Y cambiará en Z." Necesita especificar qué métrica cambia y en cuánto. Sin número no es hipótesis — señalalo.
+
+**Coherencia entre secciones:** El supuesto crítico, el experimento y la hipótesis deben atacar el mismo riesgo. Si no están alineados entre sí, es una advertencia. Si el riesgo principal declarado es "valor" pero el experimento descrito es un A/B test de UI, algo no cierra.
+
+**Riesgos:** Si el PM declara riesgo bajo en alguna dimensión pero la evidencia de validación es solo una intuición del equipo, eso es una contradicción que hay que señalar.
+
+**Un brief es genérico cuando:** el outcome podría aplicar a cualquier feature de cualquier producto; el problema no describe una situación real de un usuario en un contexto específico; la hipótesis no tiene números; o los riesgos están todos en bajo sin evidencia que lo respalde.
+
+## Campos pendientes
+
+Cuando un campo llega con el valor "unclear", el PM no tiene respuesta todavía.
+- Nunca inventes contenido ni rellenes con texto plausible.
+- Usá el objeto { "pending": true, "tarea": "..." } donde tarea es una oración concreta y accionable — específica al contexto de esta feature, no genérica. Aplicá el framework correspondiente a ese campo: si el outcome es unclear, la tarea viene de Seiden; si el supuesto es unclear, viene de Torres y Maurya; si la métrica es unclear, viene de Lean Analytics.
+
+## Advertencias
+
+Detectá activamente estas condiciones e incluílas en el array advertencias. No las menciones dentro del contenido de los campos — solo en advertencias.
+
+Tipos válidos:
+- "output_vs_outcome" — el outcome describe una feature entregada, no un cambio de comportamiento.
+- "supuesto_no_falseable" — el supuesto es una esperanza o está formulado de forma irrefutable.
+- "hipotesis_sin_metrica" — la hipótesis no especifica qué cambia ni en cuánto.
+- "riesgo_contradictorio" — el nivel de riesgo declarado no es consistente con la evidencia disponible.
+- "solucion_prematura" — hay una solución descripta en detalle antes de validar el problema.
+- "desalineacion_validacion" — el supuesto, el experimento y la hipótesis no atacan el mismo riesgo.
+- "otro" — cualquier otro problema de calidad que afecte la utilidad del brief.
+
+## Formato de output
+
+Respondé ÚNICAMENTE con un objeto JSON válido. Sin texto antes ni después. Sin bloques de código markdown. Sin comentarios dentro del JSON. Solo el JSON.
+
+No agregues campos fuera del esquema.
+
+Para los campos con contenido del usuario, escribí el texto en español profesional y claro, fiel al significado original. No agregues información que el usuario no proporcionó — el enriquecimiento va en los campos de síntesis (riesgos.lectura, norte.nota_reformulacion) y en las advertencias.
+
+Esquema exacto:
+
+{
+  "feature_name": string,
+  "estado": "listo_para_desarrollo" | "discovery_en_curso",
+  "advertencias": [
+    { "campo": string, "tipo": string, "texto": string }
+  ],
+  "contexto": {
+    "etapa": string,
+    "modelo": string,
+    "area": string
+  },
+  "norte": {
+    "outcome_esperado": string | { "pending": true, "tarea": string },
+    "conexion_negocio": string | { "pending": true, "tarea": string },
+    "problema_o_solucion": "problema" | "solucion" | "mixto",
+    "nota_reformulacion": string | null
+  },
+  "oportunidad": {
+    "problema": string | { "pending": true, "tarea": string },
+    "preguntas_investigacion": string,
+    "evidencia_actual": string
+  },
+  "riesgos": {
+    "valor": "bajo" | "medio" | "alto",
+    "usabilidad": "bajo" | "medio" | "alto",
+    "factibilidad": "bajo" | "medio" | "alto",
+    "viabilidad": "bajo" | "medio" | "alto",
+    "riesgo_principal": string | { "pending": true, "tarea": string },
+    "lectura": string
+  },
+  "validacion": {
+    "supuesto_critico": string | { "pending": true, "tarea": string },
+    "experimento_minimo": string | { "pending": true, "tarea": string },
+    "hipotesis": string | { "pending": true, "tarea": string },
+    "criterio_exito": string | { "pending": true, "tarea": string }
+  },
+  "shape": {
+    "appetite": string,
+    "solucion_propuesta": string | { "pending": true, "tarea": string },
+    "fuera_alcance": string | null,
+    "rabbit_holes": string | null
+  },
+  "metricas": {
+    "omtm": string | { "pending": true, "tarea": string },
+    "benchmark": string | { "pending": true, "tarea": string },
+    "vanity_check": string | null
+  }
+}
+
+Notas sobre campos específicos:
+- norte.nota_reformulacion: solo cuando problema_o_solucion es "solucion" o "mixto". Una oración que reformula la solución recibida como problema a resolver. null en los demás casos.
+- riesgos.lectura: una oración que sintetiza el perfil de riesgo de la feature — qué combinación presentan los cuatro ejes y qué implica para las decisiones inmediatas. Este campo es tuyo, no del usuario.
+- oportunidad.evidencia_actual: siempre un string con el label legible del nivel de validación — nunca pending.
+- estado: "discovery_en_curso" si hay al menos un campo con pending true. "listo_para_desarrollo" si todos los campos clave tienen contenido.
+- advertencias puede ser [] si no hay ninguna.`;
+
+// ── API INTEGRATION ──────────────────────────────────────────────────────────
+function buildPayload(ans) {
+  const POL = { problema: 'Un problema a resolver', solucion: 'Una solución ya definida', mixto: 'Mezcla de ambos' };
+  const fv = v => (!v || v === 'unclear') ? 'pendiente de discovery' : v;
+  const line = (label, val) => val ? `${label}: ${val}\n` : '';
+
+  let out = `Feature: ${ans.feature_name || '(sin nombre)'}\n\n`;
+
+  out += `CONTEXTO\n`;
+  out += line('Etapa del producto', EL[ans.etapa]);
+  out += line('Modelo de negocio', ML[ans.modelo]);
+  out += line('Área AARRR', AL[ans.area]);
+
+  out += `\nNORTE (Seiden · Cagan)\n`;
+  out += line('Outcome esperado', fv(ans.outcome));
+  out += line('Conexión con el negocio', fv(ans.negocio));
+  out += line('¿Problema o solución?', POL[ans.problema_o_solucion]);
+
+  out += `\nOPORTUNIDAD (Torres · Fitzpatrick)\n`;
+  out += line('Problema — hipótesis a contrastar', fv(ans.problema_resumen));
+  out += line('Preguntas de investigación', ans.preguntas_investigacion);
+  out += line('Validación actual', EVL[ans.evidencia_actual]);
+
+  out += `\nRIESGOS (Cagan · Maurya)\n`;
+  out += line('Riesgo de valor', ans.riesgo_valor);
+  out += line('Riesgo de usabilidad', ans.riesgo_usabilidad);
+  out += line('Riesgo de factibilidad', ans.riesgo_factibilidad);
+  out += line('Riesgo de viabilidad', ans.riesgo_viabilidad);
+  out += line('Riesgo principal', fv(ans.riesgo_principal));
+
+  out += `\nVALIDACIÓN (Maurya · Torres)\n`;
+  out += line('Supuesto crítico', fv(ans.supuesto_critico));
+  out += line('Experimento mínimo', fv(ans.experimento));
+  out += line('Hipótesis', fv(ans.hipotesis));
+  out += line('Criterio de éxito/fracaso', fv(ans.criterio_exito));
+
+  out += `\nSHAPE (Singer)\n`;
+  out += line('Appetite', APL[ans.appetite]);
+  out += line('Solución propuesta', fv(ans.solucion_propuesta));
+  out += line('Fuera del alcance', ans.fuera_alcance);
+  out += line('Rabbit holes', ans.rabbit_holes);
+
+  out += `\nMÉTRICAS (Lean Analytics · Seiden)\n`;
+  out += line('OMTM', fv(ans.omtm));
+  out += line('Benchmark', fv(ans.benchmark));
+  out += line('Vanity metric a evitar', ans.vanity_check);
+
+  return out.trim();
+}
+
+async function callAPI(payload) {
+  const container = document.getElementById('stageContainer');
+
+  container.innerHTML = '';
+  const loadDiv = document.createElement('div');
+  loadDiv.style.cssText = 'opacity:0;animation:fadeUp 0.5s ease forwards;padding:3rem 0;text-align:center;';
+  loadDiv.innerHTML = `
+    <div style="font-size:14px;color:var(--text-muted);margin-bottom:0.5rem;">Generando brief...</div>
+    <div style="font-size:12px;color:var(--text-dim);">Claude está analizando tus respuestas</div>`;
+  container.appendChild(loadDiv);
+
+  const key = sessionStorage.getItem('fa_api_key');
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key': key,
+        'anthropic-version': '2023-06-01',
+        'content-type': 'application/json',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 4096,
+        system: SYSTEM_PROMPT,
+        messages: [{ role: 'user', content: payload }]
+      })
+    });
+
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData?.error?.message || `Error ${res.status} — revisá que la API key sea válida.`);
+    }
+
+    const data = await res.json();
+    let text = (data.content?.[0]?.text || '').trim();
+    text = text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '');
+    return JSON.parse(text);
+
+  } catch (err) {
+    container.innerHTML = '';
+    const errDiv = document.createElement('div');
+    errDiv.style.cssText = 'opacity:0;animation:fadeUp 0.5s ease forwards;';
+
+    const alertBox = document.createElement('div');
+    alertBox.className = 'alert alert-warning';
+    alertBox.style.marginBottom = '1.5rem';
+
+    const title = document.createElement('strong');
+    title.textContent = err instanceof SyntaxError
+      ? 'La API respondió con un formato inesperado. Intentá de nuevo.'
+      : 'No se pudo generar el brief.';
+    alertBox.appendChild(title);
+
+    if (!(err instanceof SyntaxError)) {
+      const detail = document.createElement('div');
+      detail.style.cssText = 'margin-top:4px;font-size:12px;';
+      detail.textContent = err.message;
+      alertBox.appendChild(detail);
+    }
+
+    errDiv.appendChild(alertBox);
+
+    const nav = document.createElement('div');
+    nav.className = 'nav-row';
+    const backBtn = document.createElement('button');
+    backBtn.className = 'btn-back';
+    backBtn.textContent = '← Volver al cuestionario';
+    backBtn.onclick = () => { cs--; cq = STAGES[cs].questions.length - 1; renderProgress(); renderStage(); };
+    nav.appendChild(backBtn);
+    errDiv.appendChild(nav);
+
+    container.appendChild(errDiv);
+    return null;
+  }
+}
 
 // ── RENDER ───────────────────────────────────────────────────────────────────
 function renderProgress() {
@@ -569,7 +800,9 @@ function goNext() {
   }
   if (cq < stage.questions.length - 1) cq++;
   else { cs++; cq = 0; }
-  renderProgress(); renderStage();
+  renderProgress();
+  if (cs >= STAGES.length) { callAPI(buildPayload(ans)); return; }
+  renderStage();
   window.scrollTo({top:0, behavior:'smooth'});
 }
 
@@ -602,6 +835,7 @@ const EL={empathy:'Empatía',stickiness:'Adhesión',virality:'Viralidad',revenue
 const ML={saas:'SaaS / suscripción',mobile:'Mobile app / freemium',ecommerce:'E-commerce',marketplace:'Marketplace',media:'Media / contenido',ugc:'UGC'};
 const AL={acquisition:'Adquisición',activation:'Activación',retention:'Retención',revenue:'Revenue',referral:'Referral'};
 const APL={small:'Small batch (1–2 semanas)',medium:'Medium batch (3–4 semanas)',big:'Big batch (6 semanas)'};
+const EVL={validada:'✓ Ya hablé con usuarios y vi el problema repetirse',parcial:'Señales indirectas — falta contrastar con usuarios',hipotesis:'Intuición del equipo — punto de partida para investigar'};
 
 function fmtVal(key) {
   const v = ans[key];
@@ -680,12 +914,11 @@ function renderOutput(container) {
       </div>
     </div>
     <div class="output-section">
-      <div class="output-section-header"><span class="output-section-tag">03</span><span class="output-section-title">Oportunidad</span><span class="output-section-source">Torres · Fitzpatrick</span></div>
+      <div class="output-section-header"><span class="output-section-tag">03</span><span class="output-section-title">Oportunidad — punto de partida para investigar</span><span class="output-section-source">Torres · Fitzpatrick</span></div>
       <div class="output-section-body">
-        <div class="output-row"><div class="output-label">Problema</div>${fmtVal('problema_resumen')}</div>
-        <div class="output-row"><div class="output-label">Tipo de entrevistas</div><div>${ans.entrevistas_tipo==='pasado'?'✓ Sobre experiencias pasadas':ans.entrevistas_tipo==='futuro'?'⚠ Sobre el futuro — datos hipotéticos':ans.entrevistas_tipo==='mixto'?'Mixto':'⚠ Sin entrevistas todavía'}</div></div>
-        <div class="output-row"><div class="output-label">Patrón observado</div>${fmtVal('patron')}</div>
-        <div class="output-row"><div class="output-label">Compromiso</div><div>${ans.compromisos==='si'?'✓ Hubo compromiso concreto':ans.compromisos==='no'?'⚠ Solo comentarios positivos':'Pendiente'}</div></div>
+        <div class="output-row"><div class="output-label">Problema (hipótesis a contrastar)</div>${fmtVal('problema_resumen')}</div>
+        <div class="output-row"><div class="output-label">Preguntas para investigar</div>${fmtVal('preguntas_investigacion')}</div>
+        <div class="output-row"><div class="output-label">Validación actual de la hipótesis</div><div>${EVL[ans.evidencia_actual]||'Sin evaluar'}</div></div>
       </div>
     </div>
     <div class="output-section">
@@ -774,18 +1007,16 @@ ${fv('negocio')}
 
 ---
 
-## 03 — Oportunidad
+## 03 — Oportunidad — punto de partida para investigar
 *Torres · Fitzpatrick*
 
-**Problema:**  
+**Problema (hipótesis a contrastar):**
 ${fv('problema_resumen')}
 
-**Entrevistas:** ${ans.entrevistas_tipo}
+**Preguntas para investigar:**
+${fv('preguntas_investigacion')}
 
-**Patrón observado:**  
-${fv('patron')}
-
-**Compromiso:** ${ans.compromisos}
+**Validación actual de la hipótesis:** ${EVL[ans.evidencia_actual]||'Sin evaluar'}
 
 ---
 

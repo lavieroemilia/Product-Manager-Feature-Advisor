@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git clone *)",
+      "Bash(mv temp_clone/.git .)",
+      "Bash(mv temp_clone/README.md .)",
+      "Bash(mv temp_clone/index.html .)",
+      "Bash(mv temp_clone/decisions .)",
+      "Bash(mv temp_clone/features .)",
+      "Bash(start index.html)"
+    ]
+  }
+}
