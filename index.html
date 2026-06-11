@@ -337,7 +337,7 @@ body {
     <div class="key-label">Anthropic API key</div>
     <input type="password" id="keyInput" class="key-input" placeholder="sk-ant-api03-...">
     <button class="btn-primary" onclick="saveKey()">Comenzar</button>
-    <p class="key-note">No cierres la pestaña porque perderás el progreso.</p>
+    <p class="key-note">Esta herramienta llama directamente a la API de Anthropic. Tu key nunca sale de tu dispositivo y se borra al cerrar la pestaña.</p>
   </div>
 </div>
 
@@ -717,6 +717,13 @@ async function startSession() {
     const response = await callClaude('Hola, quiero definir una feature.');
     removeTyping();
     renderAgentMessage(response);
+
+    // Aviso de progreso — aparece una sola vez al inicio de la sesión
+    const chat = document.getElementById('chatWrap');
+    const notice = document.createElement('div');
+    notice.style.cssText = 'text-align:center;font-size:11px;color:var(--text-dim);padding:4px 0 8px;opacity:0;animation:fadeUp 0.4s 0.3s ease forwards;';
+    notice.textContent = 'La conversación no se guarda. Si cierras la pestaña, perderás el progreso.';
+    chat.appendChild(notice);
   } catch (err) {
     removeTyping();
     renderError('No pude conectar con la API. Revisá tu key e intentá de nuevo.');
