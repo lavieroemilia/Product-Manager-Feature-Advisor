@@ -3,1448 +3,732 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PM Feature Advisor</title>
+<title>Feature Advisor — Conversacional</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg: #0f0f0f; --surface: #161616; --surface2: #1e1e1e;
-  --border: #2a2a2a; --border-hover: #3a3a3a;
-  --accent: #c8f04d; --accent-dim: #a8cc3a;
-  --text: #f0ede6; --text-muted: #888; --text-dim: #555;
-  --danger: #ff6b6b; --warning: #ffc96b; --success: #6bffb8;
+  --bg: #0f0f0f;
+  --surface: #161616;
+  --surface2: #1e1e1e;
+  --border: #2a2a2a;
+  --border-hover: #3a3a3a;
+  --accent: #c8f04d;
+  --accent-dim: #a8cc3a;
+  --text: #f0ede6;
+  --text-muted: #888;
+  --text-dim: #444;
+  --danger: #ff6b6b;
+  --warning: #ffc96b;
+  --success: #6bffb8;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; font-weight: 300; min-height: 100vh; line-height: 1.7; }
-.app { max-width: 720px; margin: 0 auto; padding: 3rem 2rem 6rem; }
-.header { margin-bottom: 3rem; opacity: 0; animation: fadeUp 0.6s ease forwards; }
-.header-eyebrow { font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--accent); margin-bottom: 0.75rem; }
-.header h1 { font-family: 'DM Serif Display', serif; font-size: 2.4rem; font-weight: 400; line-height: 1.15; }
-.header h1 em { font-style: italic; color: var(--accent); }
-.progress-wrap { margin-bottom: 2.5rem; opacity: 0; animation: fadeUp 0.6s 0.1s ease forwards; }
-.progress-stages { display: flex; gap: 4px; margin-bottom: 0.5rem; }
-.progress-stage { flex: 1; height: 3px; background: var(--border); border-radius: 2px; transition: background 0.4s; }
-.progress-stage.active { background: var(--accent); }
-.progress-stage.done { background: var(--accent-dim); opacity: 0.5; }
-.progress-label { font-size: 12px; color: var(--text-muted); display: flex; justify-content: space-between; }
-.progress-label span { color: var(--accent); }
-.stage-tag { display: inline-block; font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--accent); border: 1px solid var(--accent); padding: 3px 10px; border-radius: 20px; margin-bottom: 0.75rem; }
-.stage-source { font-size: 11px; color: var(--text-dim); margin-top: 4px; }
-.question-block { margin-bottom: 1.5rem; opacity: 0; animation: fadeUp 0.5s ease forwards; }
-.question-text { font-family: 'DM Serif Display', serif; font-size: 1.25rem; font-weight: 400; margin-bottom: 0.4rem; line-height: 1.4; }
-.question-hint { font-size: 13px; color: var(--text-muted); margin-bottom: 1rem; line-height: 1.5; }
-.alert { border-radius: 8px; padding: 10px 14px; font-size: 13px; margin-bottom: 0.75rem; line-height: 1.5; }
-.alert-warning { background: rgba(255,201,107,0.08); border: 1px solid rgba(255,201,107,0.3); color: var(--warning); }
-.alert-discovery { background: rgba(200,240,77,0.06); border: 1px solid rgba(200,240,77,0.25); color: var(--accent); }
-.options { display: flex; flex-direction: column; gap: 8px; }
-.option { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 11px 15px; cursor: pointer; font-family: 'DM Sans', sans-serif; font-size: 14px; color: var(--text); text-align: left; transition: all 0.2s; line-height: 1.4; }
-.option:hover { border-color: var(--accent); background: var(--surface2); }
-.option.selected { border-color: var(--accent); background: rgba(200,240,77,0.07); color: var(--accent); }
-.option.selected .option-note { color: rgba(200,240,77,0.6); }
-.option-note { font-size: 12px; color: var(--text-dim); margin-top: 3px; display: block; }
-.option-unclear { border-style: dashed; border-color: var(--text-dim); color: var(--text-muted); }
-.option-unclear:hover { border-color: var(--warning); color: var(--warning); background: rgba(255,201,107,0.05); }
-.option-unclear.selected { border-color: var(--warning); background: rgba(255,201,107,0.07); color: var(--warning); }
-.suggestions-label { font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 8px; margin-top: 1rem; }
-.suggestions { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
-.suggestion-chip { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 6px 14px; font-size: 13px; color: var(--text-muted); cursor: pointer; transition: all 0.2s; line-height: 1.3; }
-.suggestion-chip:hover { border-color: var(--accent); color: var(--accent); background: rgba(200,240,77,0.05); }
-.suggestion-chip.used { border-color: rgba(200,240,77,0.4); color: rgba(200,240,77,0.7); background: rgba(200,240,77,0.05); }
-.text-input { width: 100%; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 12px 15px; font-family: 'DM Sans', sans-serif; font-size: 14px; color: var(--text); resize: vertical; min-height: 80px; outline: none; transition: border-color 0.2s; line-height: 1.6; }
-.text-input:focus { border-color: var(--accent); }
-.text-input::placeholder { color: var(--text-dim); }
+html, body { height: 100%; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 300;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
 
-/* Discovery guidance box */
-.discovery-box { background: rgba(200,240,77,0.04); border: 1px solid rgba(200,240,77,0.2); border-radius: 10px; padding: 18px 20px; margin-top: 1rem; opacity: 0; animation: fadeUp 0.4s ease forwards; }
-.discovery-box-title { font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); margin-bottom: 10px; }
-.discovery-box p { font-size: 14px; color: var(--text-muted); line-height: 1.6; margin-bottom: 10px; }
-.discovery-box p:last-child { margin-bottom: 0; }
-.discovery-step { display: flex; gap: 10px; margin-bottom: 8px; font-size: 13px; color: var(--text-muted); line-height: 1.5; }
-.discovery-step-num { color: var(--accent); font-weight: 500; flex-shrink: 0; min-width: 18px; }
-.discovery-note { font-size: 12px; color: var(--text-dim); margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); font-style: italic; }
+/* ── HEADER ── */
+.header {
+  padding: 1.25rem 2rem;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+.header-left { display: flex; align-items: baseline; gap: 0.75rem; }
+.header-title { font-family: 'DM Serif Display', serif; font-size: 1.1rem; font-weight: 400; }
+.header-title em { font-style: italic; color: var(--accent); }
+.header-eyebrow { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-dim); }
+.header-right { display: flex; align-items: center; gap: 1rem; }
+.phase-indicator {
+  font-size: 11px;
+  color: var(--text-dim);
+  letter-spacing: 0.08em;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.phase-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  opacity: 0.4;
+  transition: opacity 0.3s, background 0.3s;
+}
+.phase-dot.active { opacity: 1; }
+.phase-dot.done { opacity: 0.3; background: var(--accent-dim); }
+.btn-key {
+  background: none;
+  border: none;
+  font-size: 11px;
+  color: var(--text-dim);
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  letter-spacing: 0.05em;
+  padding: 4px 0;
+}
+.btn-key:hover { color: var(--text-muted); }
 
-.nav-row { display: flex; gap: 12px; margin-top: 1.5rem; align-items: center; }
-.btn-next { background: var(--accent); color: #0f0f0f; border: none; border-radius: 8px; padding: 11px 24px; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s; }
-.btn-next:hover { background: var(--accent-dim); }
-.btn-back { background: none; border: 1px solid var(--border); border-radius: 8px; padding: 11px 20px; font-family: 'DM Sans', sans-serif; font-size: 14px; color: var(--text-muted); cursor: pointer; transition: all 0.2s; }
-.btn-back:hover { border-color: var(--border-hover); color: var(--text); }
-.q-counter { font-size: 12px; color: var(--text-dim); margin-top: 1rem; }
-.divider { border: none; border-top: 1px solid var(--border); margin: 1.5rem 0; }
+/* ── CHAT AREA ── */
+.chat-wrap {
+  flex: 1;
+  overflow-y: auto;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  scroll-behavior: smooth;
+}
+.chat-wrap::-webkit-scrollbar { width: 4px; }
+.chat-wrap::-webkit-scrollbar-track { background: transparent; }
+.chat-wrap::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
-/* Output */
-.output { opacity: 0; animation: fadeUp 0.6s ease forwards; }
-.output-title { font-family: 'DM Serif Display', serif; font-size: 1.8rem; font-weight: 400; margin-bottom: 0.4rem; }
-.output-meta { font-size: 12px; color: var(--text-dim); margin-bottom: 2rem; }
-.output-section { margin-bottom: 1.5rem; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
-.output-section-header { padding: 11px 18px; background: var(--surface2); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
-.output-section-tag { font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--accent); }
-.output-section-title { font-size: 14px; font-weight: 500; }
-.output-section-source { font-size: 11px; color: var(--text-dim); margin-left: auto; }
-.output-section-body { padding: 16px 18px; }
-.output-row { margin-bottom: 12px; font-size: 14px; line-height: 1.6; }
-.output-row:last-child { margin-bottom: 0; }
-.output-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-dim); margin-bottom: 3px; }
-.pending-badge { display: inline-block; background: rgba(255,201,107,0.1); border: 1px solid rgba(255,201,107,0.3); color: var(--warning); font-size: 11px; padding: 2px 10px; border-radius: 20px; margin-bottom: 6px; }
-.pending-task { font-size: 13px; color: var(--text-muted); padding: 8px 12px; background: rgba(255,201,107,0.04); border-left: 2px solid rgba(255,201,107,0.3); border-radius: 0 6px 6px 0; margin-top: 6px; line-height: 1.5; }
-.risk-row { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
-.risk-row:last-child { border-bottom: none; }
-.risk-badge { font-size: 11px; padding: 3px 10px; border-radius: 20px; white-space: nowrap; }
-.risk-high { background: rgba(255,107,107,0.15); color: var(--danger); border: 1px solid rgba(255,107,107,0.3); }
-.risk-med { background: rgba(255,201,107,0.15); color: var(--warning); border: 1px solid rgba(255,201,107,0.3); }
-.risk-low { background: rgba(107,255,184,0.15); color: var(--success); border: 1px solid rgba(107,255,184,0.3); }
-.metric-chip { display: inline-block; background: rgba(200,240,77,0.1); border: 1px solid rgba(200,240,77,0.3); color: var(--accent); font-size: 12px; padding: 4px 10px; border-radius: 20px; margin: 3px 3px 3px 0; }
-.download-row { margin-top: 2rem; display: flex; gap: 12px; flex-wrap: wrap; }
-.btn-download { background: var(--accent); color: #0f0f0f; border: none; border-radius: 8px; padding: 12px 28px; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s; }
-.btn-download:hover { background: var(--accent-dim); }
-.btn-restart { background: none; border: 1px solid var(--border); border-radius: 8px; padding: 12px 20px; font-family: 'DM Sans', sans-serif; font-size: 14px; color: var(--text-muted); cursor: pointer; transition: all 0.2s; }
-.btn-restart:hover { border-color: var(--border-hover); color: var(--text); }
-@keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+/* ── MESSAGES ── */
+.msg { display: flex; gap: 1rem; opacity: 0; animation: fadeUp 0.4s ease forwards; max-width: 100%; }
+.msg-agent { align-items: flex-start; }
+.msg-user { align-items: flex-start; flex-direction: row-reverse; }
+
+.msg-avatar {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  margin-top: 2px;
+}
+.msg-avatar-agent { background: rgba(200,240,77,0.12); border: 1px solid rgba(200,240,77,0.25); color: var(--accent); }
+.msg-avatar-user { background: var(--surface2); border: 1px solid var(--border); color: var(--text-muted); }
+
+.msg-bubble {
+  max-width: 72%;
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-size: 14px;
+  line-height: 1.7;
+}
+.msg-bubble-agent {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-top-left-radius: 4px;
+  color: var(--text);
+}
+.msg-bubble-user {
+  background: rgba(200,240,77,0.08);
+  border: 1px solid rgba(200,240,77,0.2);
+  border-top-right-radius: 4px;
+  color: var(--text);
+}
+
+/* Insight tags dentro de los mensajes del agente */
+.insight-tag {
+  display: inline-block;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 20px;
+  margin-bottom: 8px;
+}
+.tag-question { background: rgba(200,240,77,0.08); border: 1px solid rgba(200,240,77,0.25); color: var(--accent); }
+.tag-warning { background: rgba(255,201,107,0.08); border: 1px solid rgba(255,201,107,0.3); color: var(--warning); }
+.tag-insight { background: rgba(107,255,184,0.08); border: 1px solid rgba(107,255,184,0.25); color: var(--success); }
+.tag-brief { background: rgba(200,240,77,0.12); border: 1px solid rgba(200,240,77,0.4); color: var(--accent); }
+
+.msg-bubble p { margin-bottom: 0.6rem; }
+.msg-bubble p:last-child { margin-bottom: 0; }
+.msg-bubble strong { font-weight: 500; color: var(--accent); }
+.msg-bubble em { font-style: italic; color: var(--text-muted); }
+
+/* Chips de sugerencia rápida */
+.quick-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+.chip {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 5px 14px;
+  font-size: 12px;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: 'DM Sans', sans-serif;
+}
+.chip:hover { border-color: var(--accent); color: var(--accent); background: rgba(200,240,77,0.05); }
+
+/* Brief card dentro del chat */
+.brief-card {
+  background: var(--surface2);
+  border: 1px solid rgba(200,240,77,0.25);
+  border-radius: 10px;
+  overflow: hidden;
+  margin-top: 10px;
+}
+.brief-card-header {
+  padding: 10px 14px;
+  background: rgba(200,240,77,0.06);
+  border-bottom: 1px solid rgba(200,240,77,0.15);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.brief-card-body { padding: 14px; }
+.brief-row { margin-bottom: 10px; font-size: 13px; line-height: 1.6; }
+.brief-row:last-child { margin-bottom: 0; }
+.brief-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-dim); margin-bottom: 3px; }
+.brief-value { color: var(--text-muted); }
+.brief-value.highlight { color: var(--text); }
+.pending-inline { color: var(--warning); font-style: italic; }
+
+/* Typing indicator */
+.typing { display: flex; align-items: center; gap: 4px; padding: 4px 0; }
+.typing-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--text-dim); animation: typingBounce 1.2s ease-in-out infinite; }
+.typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.typing-dot:nth-child(3) { animation-delay: 0.4s; }
+@keyframes typingBounce { 0%, 60%, 100% { transform: translateY(0); } 30% { transform: translateY(-4px); } }
+
+/* ── INPUT AREA ── */
+.input-wrap {
+  flex-shrink: 0;
+  padding: 1.25rem 2rem 1.5rem;
+  border-top: 1px solid var(--border);
+  background: var(--bg);
+}
+.input-row {
+  display: flex;
+  gap: 10px;
+  align-items: flex-end;
+  max-width: 800px;
+  margin: 0 auto;
+}
+.input-field {
+  flex: 1;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 11px 15px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  color: var(--text);
+  resize: none;
+  outline: none;
+  line-height: 1.6;
+  min-height: 44px;
+  max-height: 140px;
+  overflow-y: auto;
+  transition: border-color 0.2s;
+}
+.input-field:focus { border-color: rgba(200,240,77,0.4); }
+.input-field::placeholder { color: var(--text-dim); }
+.btn-send {
+  background: var(--accent);
+  color: #0f0f0f;
+  border: none;
+  border-radius: 10px;
+  width: 44px; height: 44px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.2s, opacity 0.2s;
+}
+.btn-send:hover { background: var(--accent-dim); }
+.btn-send:disabled { opacity: 0.3; cursor: not-allowed; }
+.btn-send svg { width: 16px; height: 16px; }
+.input-hint { font-size: 11px; color: var(--text-dim); text-align: center; margin-top: 8px; }
+
+/* ── KEY ENTRY ── */
+.key-screen {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+.key-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 2.5rem;
+  max-width: 420px;
+  width: 100%;
+  opacity: 0;
+  animation: fadeUp 0.5s ease forwards;
+}
+.key-eyebrow { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--accent); margin-bottom: 0.75rem; }
+.key-title { font-family: 'DM Serif Display', serif; font-size: 1.6rem; line-height: 1.2; margin-bottom: 0.5rem; }
+.key-title em { font-style: italic; color: var(--accent); }
+.key-desc { font-size: 13px; color: var(--text-muted); line-height: 1.6; margin-bottom: 1.5rem; }
+.key-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-dim); margin-bottom: 6px; }
+.key-input {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 11px 14px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.2s;
+  margin-bottom: 1rem;
+}
+.key-input:focus { border-color: rgba(200,240,77,0.4); }
+.btn-primary {
+  width: 100%;
+  background: var(--accent);
+  color: #0f0f0f;
+  border: none;
+  border-radius: 8px;
+  padding: 12px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.btn-primary:hover { background: var(--accent-dim); }
+.key-note { font-size: 11px; color: var(--text-dim); text-align: center; margin-top: 0.75rem; }
+
+@keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 </style>
 </head>
 <body>
-<div class="app">
-  <div class="header">
-    <div class="header-eyebrow">Product Manager Framework</div>
-    <h1>Feature<br><em>Advisor</em></h1>
-    <div id="forgetKeyWrap" style="display:none;margin-top:0.75rem;">
-      <button onclick="forgetKey()" style="background:none;border:none;font-size:11px;color:var(--text-dim);cursor:pointer;padding:0;letter-spacing:0.05em;font-family:'DM Sans',sans-serif;">
-        Olvidar API key
-      </button>
-    </div>
+
+<div class="header">
+  <div class="header-left">
+    <div class="header-eyebrow">PM Framework</div>
+    <div class="header-title">Feature <em>Advisor</em></div>
   </div>
-  <div class="progress-wrap">
-    <div class="progress-stages" id="progressStages"></div>
-    <div class="progress-label">
-      <span id="progressLabel">Etapa 1 de 7</span>
-      <span id="progressName">Contexto</span>
+  <div class="header-right">
+    <div class="phase-indicator" id="phaseIndicator" style="display:none">
+      <span id="phaseLabel" style="margin-right:4px"></span>
+      <div class="phase-dot" id="dot0"></div>
+      <div class="phase-dot" id="dot1"></div>
+      <div class="phase-dot" id="dot2"></div>
+      <div class="phase-dot" id="dot3"></div>
+      <div class="phase-dot" id="dot4"></div>
     </div>
+    <button class="btn-key" id="btnForget" style="display:none" onclick="forgetKey()">Olvidar API key</button>
   </div>
-  <div id="stageContainer"></div>
 </div>
+
+<div id="keyScreen" class="key-screen">
+  <div class="key-card">
+    <div class="key-eyebrow">Conversacional</div>
+    <div class="key-title">Feature<br><em>Advisor</em></div>
+    <p class="key-desc">Describí tu feature en lenguaje natural. El agente guía la definición haciendo preguntas, detectando huecos y proponiendo outcomes, métricas y experimentos.</p>
+    <div class="key-label">Anthropic API key</div>
+    <input type="password" id="keyInput" class="key-input" placeholder="sk-ant-api03-...">
+    <button class="btn-primary" onclick="saveKey()">Comenzar →</button>
+    <p class="key-note">Se borra al cerrar la pestaña. Nunca sale de tu dispositivo.</p>
+  </div>
+</div>
+
+<div id="chatWrap" class="chat-wrap" style="display:none"></div>
+
+<div id="inputWrap" class="input-wrap" style="display:none">
+  <div class="input-row">
+    <textarea
+      id="inputField"
+      class="input-field"
+      placeholder="Describe la feature que quieres definir..."
+      rows="1"
+      onkeydown="handleKey(event)"
+      oninput="autoResize(this)"
+    ></textarea>
+    <button class="btn-send" id="btnSend" onclick="sendMessage()">
+      <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M2 8L14 8M14 8L9 3M14 8L9 13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+  </div>
+  <div class="input-hint">Enter para enviar · Shift+Enter para nueva línea</div>
+</div>
+
 <script>
-const ans = {};
-let cs = 0, cq = 0;
-let lastBrief = null;
-
-// ── DISCOVERY GUIDANCE ───────────────────────────────────────────────────────
-const DISCOVERY = {
-  outcome: {
-    title: "Falta definir el aha moment",
-    why: "Sin saber qué cambio de comportamiento define el éxito, cualquier feature que construyas es una apuesta sin hipótesis. Seiden: un outcome es un cambio medible en el comportamiento humano — no una feature entregada.",
-    steps: [
-      { n: "1", t: "Analiza datos de comportamiento: compara qué hicieron en su primera sesión los usuarios que se quedaron vs. los que se fueron. Busca la acción que los separa." },
-      { n: "2", t: "Si no tienes datos: instrumenta el comportamiento de la primera hora durante 2 semanas. Registra cada acción y cuándo ocurre." },
-      { n: "3", t: "Entrevistas Mom Test con 3–5 usuarios que se quedaron: 'Cuéntame qué hiciste la primera vez que usaste el producto. ¿Cuándo decidiste que valía la pena?'" },
-      { n: "4", t: "Entrevistas Mom Test con 3–5 usuarios que pidieron la baja: 'Cuéntame qué pasó en tu primera sesión. ¿En qué momento sentiste que no era para ti?'" }
-    ],
-    note: "Mientras no tengas el aha moment identificado, no puedes definir qué construir. Este es el trabajo más importante ahora mismo."
-  },
-  negocio: {
-    title: "Falta conectar el problema con el negocio",
-    why: "Seiden: Output → Outcome → Impact. Si no puedes trazar la línea entre el comportamiento del usuario y una métrica de negocio, la feature no tiene justificación estratégica.",
-    steps: [
-      { n: "1", t: "Pregúntate: si el usuario hace X más frecuentemente, ¿qué métrica de negocio mejora directamente? (churn, MRR, CAC, NPS, referidos)" },
-      { n: "2", t: "Valida con datos: ¿hay correlación histórica entre esa acción y esa métrica? ¿Los usuarios que hicieron X tuvieron mejor retención?" },
-      { n: "3", t: "Habla con el negocio: ¿cuál es la métrica que más preocupa al equipo ahora mismo? Esa es la que debes conectar." }
-    ],
-    note: "Si no puedes conectar el outcome con el negocio, puede que estés resolviendo el problema incorrecto."
-  },
-  problema_resumen: {
-    title: "Falta validar el problema con usuarios reales",
-    why: "Torres: las oportunidades vienen de entrevistas, no de suposiciones. Si no tienes conversaciones reales que respalden el problema, cualquier solución es una apuesta.",
-    steps: [
-      { n: "1", t: "Haz 3–5 entrevistas Mom Test: 'Cuéntame la última vez que usaste el producto. ¿Qué intentabas hacer? ¿Qué pasó?'" },
-      { n: "2", t: "No preguntes si les gustaría X. Pregunta qué hicieron la última vez que tuvieron ese problema." },
-      { n: "3", t: "Busca el patrón: ¿el mismo problema aparece en al menos 3 conversaciones distintas sin que tú lo sugieras?" }
-    ],
-    note: "Una entrevista entusiasta no es señal. El patrón aparece en la repetición."
-  },
-  supuesto_critico: {
-    title: "Falta identificar el supuesto más arriesgado",
-    why: "Torres y Maurya: toda solución descansa sobre supuestos. El más peligroso es el que, si es falso, tumba toda la feature. Identificarlo es el primer paso antes de cualquier experimento.",
-    steps: [
-      { n: "1", t: "Lista todos los supuestos de tu solución: ¿qué tiene que ser verdad para que funcione?" },
-      { n: "2", t: "Para cada supuesto: ¿qué tan probable es que sea falso? ¿Qué tan grave sería si lo fuera?" },
-      { n: "3", t: "El supuesto con mayor combinación de incertidumbre + impacto es el crítico. Testa ese primero." }
-    ],
-    note: "Maurya: si no sabes cuál es tu supuesto más arriesgado, estás construyendo sin hipótesis."
-  },
-  experimento: {
-    title: "Falta definir el experimento mínimo",
-    why: "Maurya: el experimento más valioso es el más pequeño que puede refutar tu hipótesis. Construir el producto completo para validar es el error más caro en producto.",
-    steps: [
-      { n: "1", t: "Entrevista de problema (Mom Test): 5 conversaciones para confirmar que el problema existe y duele." },
-      { n: "2", t: "Entrevista de solución (Maurya): muestra una demo o mockup simple. No el producto — una representación de la idea." },
-      { n: "3", t: "Concierge MVP: resuelve el problema manualmente para 3 usuarios y mide si cambia su comportamiento." }
-    ],
-    note: "Si no sabes cómo testear el supuesto esta semana, el supuesto está mal formulado."
-  },
-  omtm: {
-    title: "Falta definir qué medir",
-    why: "Lean Analytics: la OMTM es la que responde la pregunta más importante del equipo ahora mismo. Sin ella, cualquier resultado puede interpretarse como éxito.",
-    steps: [
-      { n: "1", t: "Pregúntate: si esta feature funciona perfectamente, ¿qué número cambiaría primero y más claramente?" },
-      { n: "2", t: "Esa métrica debe ser accionable: si cambia, tienes que cambiar algo. Si no te obliga a decidir, es vanity metric." },
-      { n: "3", t: "Revisa los benchmarks de Lean Analytics para tu etapa y modelo para saber si el número que eliges es alcanzable." }
-    ],
-    note: "Una métrica que siempre sube no es una métrica — es una vanity metric disfrazada."
-  },
-  benchmark: {
-    title: "Falta definir el criterio de éxito",
-    why: "Lean Analytics: si no defines el benchmark antes de lanzar, interpretarás los resultados a conveniencia. El criterio de éxito debe fijarse antes del experimento.",
-    steps: [
-      { n: "1", t: "Busca el benchmark de la industria para tu modelo y etapa (Lean Analytics los incluye por modelo)." },
-      { n: "2", t: "Mide el estado actual de esa métrica antes de lanzar — esa es tu línea de base." },
-      { n: "3", t: "Define: ¿qué mejora mínima en esa métrica justifica el tiempo invertido en esta feature?" }
-    ],
-    note: "Sin línea de base no puedes medir el impacto. Mide antes de lanzar."
-  },
-  solucion_propuesta: {
-    title: "Falta definir la solución",
-    why: "Singer: no puedes hacer shaping de algo que no está validado. Vuelve a las etapas de oportunidad y validación antes de dar forma a la solución.",
-    steps: [
-      { n: "1", t: "Completa las etapas de discovery y validación primero — especialmente el supuesto crítico." },
-      { n: "2", t: "Con el supuesto validado, genera 15–20 posibles soluciones (Torres) antes de elegir una." },
-      { n: "3", t: "Elige la solución con mejor balance entre impacto esperado y complejidad. Esa es la que describes aquí." }
-    ],
-    note: "Singer: dar forma a una solución no validada es el error más común antes de un ciclo de desarrollo."
-  },
-  riesgo_principal: {
-    title: "Falta evaluar los riesgos",
-    why: "Cagan: los cuatro riesgos deben evaluarse antes de comprometer recursos. Si no sabes cuál es el más alto, todos son igual de amenazantes.",
-    steps: [
-      { n: "1", t: "Evalúa valor: ¿tienes evidencia de que los usuarios lo quieren? Si no, ese es el riesgo más alto." },
-      { n: "2", t: "Evalúa usabilidad: ¿alguien ha intentado usar el prototipo sin que le expliques nada?" },
-      { n: "3", t: "Evalúa factibilidad: ¿los ingenieros han revisado la propuesta técnicamente?" },
-      { n: "4", t: "Evalúa viabilidad: ¿está alineado con la estrategia y los stakeholders clave?" }
-    ],
-    note: "Cagan: el riesgo no evaluado es el que tumba la feature después de construirla."
-  }
-};
-
-// ── SUGGESTIONS ──────────────────────────────────────────────────────────────
-function getSugg(qid) {
-  const e = ans.etapa, m = ans.modelo, ar = ans.area;
-  const map = {
-    outcome: {
-      activation_empathy: ["El X% de nuevos usuarios completa la acción clave dentro de la primera hora sin ayuda", "Los usuarios llegan al 'aha moment' antes de que expire el periodo de prueba", "El X% de usuarios que ven [contenido clave] en el día 1 no piden la baja en el primer mes"],
-      activation_stickiness: ["El 50% de usuarios activan la feature principal en su primera semana", "Los usuarios que completan el onboarding tienen un churn 30% menor en el primer mes", "El tiempo hasta la primera acción clave baja de X a Y minutos"],
-      retention_any: ["Los usuarios vuelven al producto al menos 3 veces por semana durante el primer mes", "La retención en día 7 sube al menos 10 puntos porcentuales", "Los usuarios que usan esta feature tienen un churn 40% menor"],
-      revenue_any: ["Los usuarios que completan este flujo convierten a pago a una tasa 25% mayor", "El tiempo hasta la primera compra se reduce de X días a Y días", "El ticket medio de usuarios que pasan por este flujo es un 15% superior"],
-      referral_any: ["Los usuarios actuales invitan al menos a 1 persona nueva durante su primer mes", "El X% de los nuevos registros llega a través de la referencia de un usuario existente", "Los usuarios que refieren a otros muestran una retención significativamente mayor que los que no"],
-      acquisition_any: ["El X% de quienes llegan por [canal] completa el registro, frente al Y% actual", "El costo de adquisición por [canal] baja de X a Y", "Los usuarios que llegan por [canal] activan a una tasa igual o mayor que los que llegan por otras vías"],
-      default: ["Los nuevos usuarios completan la acción clave dentro de las primeras 24h sin ayuda", "Los usuarios regresan al producto al menos 2 veces por semana durante el primer mes", "El X% de usuarios percibe el valor antes de que expire el periodo de prueba"]
-    },
-    negocio: {
-      mobile: ["Mejora el ARPU al aumentar el % de usuarios que convierten a pago", "Reduce el churn en los primeros 7 días — donde se pierde el 80% de usuarios en mobile", "Mejora el ratio DAU/MAU acercándose al benchmark 30/10/10 de Lean Analytics"],
-      saas: ["Baja el churn mensual por debajo del 2% (benchmark excelente Lean Analytics)", "Aumenta el CLV al mejorar la retención temprana — CAC debe ser < 1/3 del CLV", "Sube el MRR retenido al reducir cancelaciones en los primeros 90 días"],
-      ecommerce: ["Aumenta la tasa de compra recurrente por encima del 30% (modo lealtad)", "Reduce el abandono del flujo de compra y mejora la conversión", "Sube el ticket medio por cliente en al menos un 15%"],
-      default: ["Reduce el churn en el primer mes y aumenta el MRR retenido", "Aumenta la tasa de conversión de prueba a pago", "Genera usuarios satisfechos que refieren — baja el CAC a largo plazo"]
-    },
-    problema_resumen: {
-      activation_any: ["Los usuarios se registran pero no llegan al primer momento de valor — el 'aha moment'", "El onboarding tiene demasiados pasos y los usuarios abandonan antes de ver el beneficio", "Los usuarios no entienden para qué sirve el producto en los primeros 2 minutos"],
-      retention_any: ["Los usuarios activan el producto pero no regresan después del primer uso", "No hay un gancho que traiga a los usuarios de vuelta — el producto no forma hábito", "Los usuarios usan el producto una vez pero no ven razón para volver"],
-      referral_any: ["Los usuarios están satisfechos pero no encuentran un motivo claro para invitar a otros", "Compartir el producto es complicado o poco visible dentro del flujo actual", "Los usuarios recomiendan de palabra, pero no usan ningún mecanismo dentro del producto"],
-      revenue_any: ["Los usuarios usan el producto pero no ven motivo suficiente para pagar o gastar más", "El paso de gratis a pago tiene fricción o no queda claro qué se gana al pagar", "Los usuarios comparan el precio con alternativas y no perciben el valor diferencial"],
-      acquisition_any: ["Los usuarios llegan al producto pero no entienden la propuesta de valor antes de irse", "El canal de adquisición trae usuarios que no encajan con el producto y abandonan rápido", "El costo de traer un nuevo usuario es más alto de lo que el negocio puede sostener"],
-      default: ["Los usuarios no entienden qué deben hacer después de registrarse y abandonan", "Los usuarios llegan al producto pero no encuentran el valor antes de que se agote su paciencia", "Los usuarios saben que el producto existe pero no lo convierten en hábito"]
-    },
-    preguntas_investigacion: {
-      activation_any: ["¿En qué momento sintieron que el producto les aportó algo de valor por primera vez?", "¿Qué casi los hizo abandonar antes de llegar a ese momento?", "¿Qué esperaban encontrar al registrarse, y qué encontraron en realidad?"],
-      retention_any: ["¿Qué los trae de vuelta al producto — o qué hace que se olviden de él?", "Cuéntame de la última vez que volviste a usarlo: ¿qué te hizo regresar?", "¿Qué hacían antes de tener este producto, y qué pasaría si dejaran de usarlo?"],
-      referral_any: ["Cuéntame de alguna vez que le hayas mencionado este producto a alguien — ¿qué dijiste exactamente?", "¿Qué tendría que pasar para que se sintieran cómodos recomendándolo?", "¿Qué ganarían ellos, o la persona a quien refieren, al compartirlo?"],
-      revenue_any: ["Cuéntame de la última vez que decidiste pagar por algo parecido — ¿qué te convenció?", "¿Con qué comparan el valor de este producto al momento de evaluar el precio?", "¿Qué tendría que ofrecer el producto para que pagar les pareciera obvio?"],
-      acquisition_any: ["¿Cómo llegaron al producto la primera vez, y qué esperaban encontrar?", "Cuéntame qué casi te hace no probarlo — ¿qué dudas tenías?", "¿Qué te hizo confiar lo suficiente como para darle una oportunidad?"],
-      default: ["Cuéntame de la última vez que se toparon con este problema — ¿qué hicieron?", "¿Qué probaron antes de esto, y por qué no les funcionó?", "¿Qué tendría que pasar para que esto les importara justo ahora?"]
-    },
-    supuesto_critico: {
-      valor_alto: ["Suponemos que los usuarios perciben valor en esta feature — no tenemos evidencia directa", "Suponemos que este problema es prioritario para los usuarios — puede haber otros más urgentes", "Suponemos que nuestra solución resuelve el problema real — quizás hay soluciones más simples"],
-      usabilidad_alto: ["Suponemos que los usuarios entenderán la interfaz sin instrucciones — no lo hemos testeado", "Suponemos que el flujo es intuitivo — nadie ha intentado usarlo sin guía todavía", "Suponemos que los usuarios sabrán qué hacer en el paso más complejo del flujo"],
-      default: ["Suponemos que los usuarios quieren ver sus próximos pasos al entrar — no lo hemos confirmado", "Suponemos que la fricción está en el paso X — pero no hemos observado el comportamiento real", "Suponemos que simplificar el flujo aumenta la activación — puede que el problema sea otro"]
-    },
-    experimento: {
-      empathy: ["Entrevistas Mom Test con 5 usuarios: preguntar sobre la última vez que tuvieron este problema", "Observar a 3 usuarios usando el producto actual sin ayuda — documentar dónde se pierden", "Concierge MVP: resolver el problema manualmente para 3 usuarios y medir si vuelven"],
-      stickiness: ["Wizard of Oz: simular la feature manualmente para 5 usuarios — medir si cambia su comportamiento", "Fake door: añadir el botón de la feature y medir cuántos intentan usarla antes de construirla", "A/B test con el 10% de usuarios: versión con la feature vs. sin ella"],
-      default: ["Mostrar un mockup a 3–5 usuarios y observar si completan el flujo sin instrucciones (30 min)", "Entrevista de solución Maurya: mostrar una demo simple y preguntar si resuelve su problema real", "Crear una landing page con la propuesta de valor y medir el clic en 'probar'"]
-    },
-    hipotesis: { default: ["Si mostramos [elemento] a nuevos usuarios, entonces el X% completará [acción clave] sin ayuda", "Si reducimos el flujo de N a M pasos, entonces la tasa de activación subirá del X% al Y%", "Si añadimos [feature], entonces la retención en día 7 mejorará del X% al Y%"] },
-    criterio_exito: {
-      mobile: ["Éxito = activación día 1 > 35% (benchmark saludable mobile: 25–40%). Fracaso = <25%", "Éxito = retención día 7 > 15% (benchmark: 10–20%). Fracaso = <10%", "Éxito = 20% de usuarios activados convierten a pago en 30 días. Fracaso = <10%"],
-      saas: ["Éxito = churn mensual baja por debajo del 2%. Fracaso = sin cambio o sube", "Éxito = 50% de usuarios completan onboarding. Fracaso = <40%", "Éxito = tiempo hasta activación baja de X a Y días. Fracaso = sin reducción medible"],
-      default: ["Éxito = 3 de 4 usuarios completan el flujo solos. Fracaso = menos de 2 lo logran", "Éxito = retención día 7 sube al menos 5 puntos. Fracaso = sin cambio significativo", "Éxito = 70% de usuarios entienden el valor sin explicación. Fracaso = menos del 50%"]
-    },
-    solucion_propuesta: {
-      activation_any: ["Una pantalla de bienvenida que muestra el único paso más importante para empezar", "Un tour interactivo de 3 pasos que lleva al usuario directamente al 'aha moment'", "Un checklist de activación visible hasta que el usuario completa las acciones clave"],
-      retention_any: ["Una notificación contextual que recuerda al usuario la acción que dejó incompleta", "Un resumen semanal del progreso del usuario para crear el hábito de volver", "Un módulo 'dónde lo dejaste' que reduce la fricción de retomar el producto"],
-      referral_any: ["Un programa de referidos con un incentivo claro tanto para quien invita como para quien se une", "Un mecanismo para compartir integrado justo en el momento de mayor satisfacción del usuario", "Un mensaje o página que el usuario pueda reenviar fácilmente a alguien con el mismo problema"],
-      revenue_any: ["Una comparación clara de planes en el momento en que el usuario siente el límite del actual", "Un upgrade contextual que aparece cuando el usuario está a punto de necesitar más", "Una prueba guiada de la función premium en el momento de mayor uso del plan gratuito"],
-      acquisition_any: ["Una landing page enfocada en un único mensaje de valor para el canal principal", "Un onboarding adaptado a la expectativa que trae el usuario según su canal de origen", "Una campaña dirigida a un segmento específico con un mensaje adaptado a su contexto"],
-      default: ["Una pantalla post-registro con los 3 pasos más importantes para llegar al primer valor", "Un flujo de onboarding de 3 pasos con progreso visible que termina en el primer valor percibido", "Un email de activación a las 24h si el usuario no ha completado la acción clave"]
-    },
-    fuera_alcance: { default: ["No incluye personalización avanzada en esta versión", "No incluye notificaciones push ni email en v1", "No incluye analytics de uso interno para el equipo en esta versión", "No incluye integración con herramientas externas"] },
-    rabbit_holes: { default: ["La lógica de personalización puede volverse compleja — decisión: en v1 todos ven lo mismo", "La integración con permisos puede crear dependencias — separar en fase 2", "El diseño responsive para mobile puede desviar semanas — definir un breakpoint mínimo"] },
-    omtm: {
-      activation_mobile: ["% de nuevos usuarios que completan el onboarding el día del registro (objetivo: >35%)", "Retención día 1 — % que vuelven al día siguiente (benchmark: 25–40%)", "Tiempo hasta la primera acción clave (objetivo: <5 minutos desde el registro)"],
-      retention_saas: ["Churn mensual por cohorte — usuarios que usaron la feature vs. los que no (objetivo: <2%)", "Ratio usuarios activos semanales / mensuales (objetivo: >40%)", "NPS de usuarios que completan el flujo vs. los que no"],
-      default: ["% de usuarios que completan la acción clave dentro de las primeras 24h", "Retención día 7 — % de usuarios que vuelven una semana después del registro", "Tiempo medio hasta el primer valor percibido (en minutos desde el registro)"]
-    },
-    benchmark: {
-      mobile: ["Retención día 1: benchmark saludable 25–40%. Excelente: >40%. Crítico: <20%", "Retención día 7: benchmark 10–20%. Excelente: >25%. Crítico: <10%", "DAU/MAU: benchmark 30/10/10. Si DAU/MAU < 10%, el producto no forma hábito"],
-      saas: ["Churn mensual: excelente <2%, aceptable 2–5%, crítico >5% (Lean Analytics)", "Activación: objetivo >60% completando onboarding. <40% indica fricción alta", "CAC / CLV: el CAC debe ser < 1/3 del CLV para que el modelo sea sostenible"],
-      default: ["Define el estado actual de la métrica antes de lanzar — esa es tu línea de base", "Objetivo: mejorar la métrica actual en al menos un 20% en los primeros 30 días", "Compara con el benchmark de la industria para tu modelo en Lean Analytics"]
-    },
-    vanity_check: { default: ["Usuarios registrados totales — siempre sube aunque nadie use el producto", "Páginas vistas — no dice si los usuarios encontraron valor", "Descargas totales — no dice si activaron ni si volvieron"] }
-  };
-
-  const qmap = map[qid];
-  if (!qmap) return [];
-  if (Array.isArray(qmap)) return qmap;
-  const keys = [];
-  if (ar && e) keys.push(`${ar}_${e}`);
-  if (ar) keys.push(`${ar}_any`);
-  if (m) keys.push(m);
-  if (e) keys.push(e);
-  if (ans.riesgo_valor === 'alto' || ans.riesgo_principal === 'valor') keys.push('valor_alto');
-  if (ans.riesgo_usabilidad === 'alto') keys.push('usabilidad_alto');
-  for (const k of keys) { if (qmap[k]) return qmap[k]; }
-  return qmap.default || [];
-}
-
-// ── STAGES ───────────────────────────────────────────────────────────────────
-const STAGES = [
-  { id:"contexto", tag:"Etapa 1 — Contexto", source:"",
-    questions:[
-      { id:"feature_name", text:"¿Cómo se llama o describe la feature?", hint:"Nombre provisional está bien. Sirve para personalizar el documento final.", type:"text", placeholder:"Ej: First Steps, Onboarding checkout, Exportación de reportes..." },
-      { id:"etapa", text:"¿En qué etapa está el producto?", hint:"Lean Analytics: no puedes avanzar de etapa hasta que las métricas de la fase actual sean saludables.", type:"options", options:[
-        { value:"empathy", label:"Empatía", note:"Validando que el problema es real y que la gente pagaría por resolverlo" },
-        { value:"stickiness", label:"Adhesión", note:"El MVP existe — buscando que los usuarios lo usen con regularidad" },
-        { value:"virality", label:"Viralidad", note:"Usuarios actuales atraen nuevos usuarios de forma orgánica" },
-        { value:"revenue", label:"Ingresos", note:"Probando que el negocio es sostenible: CLV > CAC" },
-        { value:"scale", label:"Escala", note:"El negocio es predecible y entra en nuevos mercados" }
-      ]},
-      { id:"modelo", text:"¿Qué modelo de negocio tiene el producto?", hint:"Lean Analytics define métricas distintas para cada modelo.", type:"options", options:[
-        { value:"saas", label:"SaaS / suscripción", note:"El churn lo es todo. Si los usuarios se van más rápido de lo que entran, no escala" },
-        { value:"mobile", label:"Mobile app / freemium", note:"Tensión entre retención y monetización. ARPU vs. churn" },
-        { value:"ecommerce", label:"E-commerce / transaccional", note:"Tasa de compra recurrente: <15% adquisición, >30% lealtad" },
-        { value:"marketplace", label:"Marketplace (dos lados)", note:"Ambas partes deben quedar satisfechas" },
-        { value:"media", label:"Media / contenido", note:"Engagement sobre tráfico bruto" },
-        { value:"ugc", label:"UGC (contenido generado por usuarios)", note:"Ratio creadores vs. consumidores" }
-      ]},
-      { id:"area", text:"¿Dónde está el producto hoy frente al usuario, y qué quieres conseguir con esta feature?", hint:"AARRR — el embudo de Maurya. Elige la etapa del recorrido que esta feature busca mover. Tu respuesta determina qué preguntas y métricas te proponemos después.", type:"options", options:[
-        { value:"acquisition", label:"Atraer — quiero que lleguen más usuarios nuevos", note:"El producto aún no los tiene en la puerta" },
-        { value:"activation", label:"Activar — quiero que perciban el valor por primera vez", note:"Llegan, pero no llegan al momento 'aha'" },
-        { value:"retention", label:"Retener — quiero que vuelvan a usarlo", note:"Lo prueban, pero no vuelven" },
-        { value:"revenue", label:"Monetizar — quiero que paguen o gasten más", note:"Lo usan, pero no convierten en ingreso" },
-        { value:"referral", label:"Referir — quiero que inviten a otros", note:"Están satisfechos, pero no lo comparten" }
-      ]}
-    ]
-  },
-  { id:"norte", tag:"Etapa 2 — Norte", source:"Seiden · Cagan",
-    questions:[
-      { id:"outcome", text:"¿Qué cambio de comportamiento observable define que esta feature funcionó?", hint:"Seiden: un outcome es un cambio medible en el comportamiento humano — no una feature entregada. Formato: '[Usuario] hará [comportamiento] lo que resultará en [métrica].'", type:"text_with_suggestions", placeholder:"Describe el cambio de comportamiento esperado...", alert:{ type:"warning", text:"⚠ Si solo puedes describir qué vas a construir pero no qué cambia en el usuario, tienes un output — no un outcome." }, discoveryKey:"outcome" },
-      { id:"negocio", text:"¿Cómo conecta ese outcome con un objetivo de negocio concreto?", hint:"Seiden: el outcome es el puente entre lo que construyes y lo que le importa al negocio.", type:"text_with_suggestions", placeholder:"Conecta el cambio de comportamiento con una métrica de negocio...", discoveryKey:"negocio" },
-      { id:"problema_o_solucion", text:"¿El equipo recibió un problema a resolver o una solución ya definida?", hint:"Cagan: si llegó como solución, reformúlala como problema antes de continuar.", type:"options", options:[
-        { value:"problema", label:"Un problema a resolver", note:"El equipo tiene espacio para encontrar la mejor solución" },
-        { value:"solucion", label:"Una solución ya definida", note:"Necesitas reformularla como problema antes de continuar" },
-        { value:"mixto", label:"Mezcla de ambos", note:"Separa lo que es contexto de lo que es una propuesta" }
-      ]}
-    ]
-  },
-  { id:"oportunidad", tag:"Etapa 3 — Oportunidad", source:"Torres · Fitzpatrick",
-    questions:[
-      { id:"problema_resumen", text:"¿Qué problema o necesidad del usuario crees que resuelve esta feature?", hint:"Descríbelo como tu mejor hipótesis hoy — aunque no la hayas confirmado todavía. Esto es lo que el product designer va a ir a contrastar con usuarios reales.", type:"text_with_suggestions", placeholder:"Describe la situación real del usuario, no una suposición genérica...", discoveryKey:"problema_resumen" },
-      { id:"preguntas_investigacion", text:"¿Qué preguntas necesita responder el product designer al hablar con usuarios?", hint:"Esto es lo que arranca la investigación — no hace falta tener ya las respuestas. Mom Test: pregunta por su vida real pasada, no por lo que harían en el futuro.", type:"text_with_suggestions", placeholder:"Ej: ¿Qué hicieron la última vez que se toparon con este problema?...", discoveryKey:null },
-      { id:"evidencia_actual", text:"¿Qué tan respaldada está esta hipótesis hoy?", hint:"Sé honesta — esto le dice al equipo cuánto peso darle a la hipótesis mientras se investiga.", type:"options", options:[
-        { value:"validada", label:"Ya hablé con usuarios y vi este problema repetirse", note:"Buen punto de partida — el designer puede profundizar desde ahí" },
-        { value:"parcial", label:"Tengo señales indirectas (datos, soporte, feedback) pero no conversaciones directas", note:"Útil como pista — falta contrastarlo con usuarios" },
-        { value:"hipotesis", label:"Es una intuición del equipo — todavía no lo hemos hablado con usuarios", note:"Está bien partir de aquí, para eso es la investigación" }
-      ]}
-    ]
-  },
-  { id:"riesgos", tag:"Etapa 4 — Riesgos", source:"Cagan · Maurya",
-    questions:[
-      { id:"riesgo_valor", text:"Riesgo de valor: ¿los usuarios van a querer esto?", hint:"Cagan: ¿tienes evidencia de que los usuarios elegirían usar esta feature?", type:"options", options:[
-        { value:"bajo", label:"Bajo — tengo evidencia directa de que lo quieren" },
-        { value:"medio", label:"Medio — hay señales pero no evidencia sólida" },
-        { value:"alto", label:"Alto — no tengo evidencia, es una suposición" }
-      ]},
-      { id:"riesgo_usabilidad", text:"Riesgo de usabilidad: ¿van a saber usarlo sin ayuda?", hint:"Cagan: si necesitas explicar cómo funciona, hay un problema de usabilidad.", type:"options", options:[
-        { value:"bajo", label:"Bajo — lo han probado y lo entienden solos" },
-        { value:"medio", label:"Medio — hay dudas sobre algún paso del flujo" },
-        { value:"alto", label:"Alto — no lo hemos testeado con usuarios reales" }
-      ]},
-      { id:"riesgo_factibilidad", text:"Riesgo de factibilidad: ¿el equipo puede construirlo con los recursos actuales?", hint:"Cagan: los ingenieros deben estar en el discovery, no solo en la entrega.", type:"options", options:[
-        { value:"bajo", label:"Bajo — los ingenieros han revisado y es factible" },
-        { value:"medio", label:"Medio — hay dependencias técnicas por resolver" },
-        { value:"alto", label:"Alto — los ingenieros no han visto esto todavía" }
-      ]},
-      { id:"riesgo_viabilidad", text:"Riesgo de viabilidad: ¿tiene sentido construirlo ahora para el negocio?", hint:"Cagan: ¿está alineado con la estrategia y los stakeholders clave?", type:"options", options:[
-        { value:"bajo", label:"Bajo — está alineado con la estrategia y los stakeholders" },
-        { value:"medio", label:"Medio — hay stakeholders que no están alineados" },
-        { value:"alto", label:"Alto — no hemos validado la viabilidad con el negocio" }
-      ]},
-      { id:"riesgo_principal", text:"De los cuatro, ¿cuál es el riesgo que más puede tumbar esta feature?", hint:"Maurya: concéntrate en resolver primero el riesgo más alto antes de construir.", type:"options_with_unclear", discoveryKey:"riesgo_principal", options:[
-        { value:"valor", label:"Valor — no sabemos si lo querrán" },
-        { value:"usabilidad", label:"Usabilidad — no sabemos si sabrán usarlo" },
-        { value:"factibilidad", label:"Factibilidad — no sabemos si podemos construirlo" },
-        { value:"viabilidad", label:"Viabilidad — no sabemos si el negocio lo soporta" }
-      ]}
-    ]
-  },
-  { id:"validacion", tag:"Etapa 5 — Validación", source:"Maurya · Torres",
-    questions:[
-      { id:"supuesto_critico", text:"¿Qué supuesto específico de tu solución tiene el mayor riesgo de estar equivocado?", hint:"Torres: testa supuestos individuales, no la idea completa.", type:"text_with_suggestions", placeholder:"Describe el supuesto más arriesgado...", discoveryKey:"supuesto_critico" },
-      { id:"experimento", text:"¿Qué experimento mínimo te permite probar ese supuesto esta semana?", hint:"Maurya: construye lo mínimo necesario para aprender — no el producto completo.", type:"text_with_suggestions", placeholder:"Describe el experimento más pequeño posible...", discoveryKey:"experimento" },
-      { id:"hipotesis", text:"Formula la hipótesis del experimento", hint:"Maurya: 'Si hacemos X, entonces Y cambiará en Z.' Permite que el experimento dé una respuesta clara.", type:"text_with_suggestions", placeholder:"Si hacemos [X], entonces [Y] cambiará en [Z]...", discoveryKey:"hipotesis" },
-      { id:"criterio_exito", text:"¿Qué resultado define éxito? ¿Y fracaso?", hint:"Lean Analytics: define la línea de referencia ANTES de ejecutar el experimento.", type:"text_with_suggestions", placeholder:"Éxito = ... / Fracaso = ...", discoveryKey:"criterio_exito" }
-    ]
-  },
-  { id:"shape", tag:"Etapa 6 — Shape", source:"Singer (Shape Up)",
-    questions:[
-      { id:"appetite", text:"¿Cuánto tiempo estás dispuesta a invertir en esto?", hint:"Singer: el appetite define el alcance. Si la solución no cabe, recortas el alcance — no pides más tiempo.", type:"options", options:[
-        { value:"small", label:"Small batch — 1 a 2 semanas", note:"Para mejoras focalizadas con alcance bien definido" },
-        { value:"medium", label:"Medium batch — 3 a 4 semanas", note:"Para features con varias partes interconectadas" },
-        { value:"big", label:"Big batch — 6 semanas", note:"Para trabajo significativo que cambia el producto de forma relevante" }
-      ]},
-      { id:"solucion_propuesta", text:"Describe la solución a nivel medio de abstracción", hint:"Singer: suficientemente concreta para que el equipo entienda, suficientemente abstracta para que tenga espacio creativo.", type:"text_with_suggestions", placeholder:"Describe qué se construye sin entrar en detalles de implementación...", discoveryKey:"solucion_propuesta" },
-      { id:"fuera_alcance", text:"¿Qué queda explícitamente FUERA del alcance?", hint:"Singer: definir los límites es tan importante como definir lo que entra.", type:"text_with_suggestions", placeholder:"Lista lo que no entra en esta versión...", discoveryKey:null },
-      { id:"rabbit_holes", text:"¿Qué problemas técnicos o de diseño podrían absorberte semanas si no los resuelves antes?", hint:"Singer: el shaping identifica y parcha los rabbit holes antes de que el equipo empiece a construir.", type:"text_with_suggestions", placeholder:"Identifica los riesgos de ejecución...", discoveryKey:null }
-    ]
-  },
-  { id:"metricas", tag:"Etapa 7 — Métricas", source:"Lean Analytics · Seiden",
-    questions:[
-      { id:"omtm", text:"¿Cuál es la única métrica que importa para esta feature ahora mismo?", hint:"Lean Analytics: la OMTM responde la pregunta más importante del equipo en este momento.", type:"text_with_suggestions", placeholder:"La métrica que, si mejora, significa que esta feature funcionó...", discoveryKey:"omtm" },
-      { id:"benchmark", text:"¿Qué número define éxito? ¿Cuál es tu benchmark?", hint:"Lean Analytics: define la línea antes de lanzar. Para mobile: retención día 1 = 25–40%. Para SaaS: churn <2%.", type:"text_with_suggestions", placeholder:"Éxito = X%. Benchmark actual = Y%. Objetivo = Z%...", discoveryKey:"benchmark" },
-      { id:"vanity_check", text:"¿Qué métrica podrías estar tentada a medir pero que no te obliga a tomar ninguna decisión?", hint:"Lean Analytics: una vanity metric siempre crece pero no informa decisiones.", type:"text_with_suggestions", placeholder:"La métrica fácil de medir pero que no dice si funcionó...", discoveryKey:null }
-    ]
-  }
-];
+// ── STATE ─────────────────────────────────────────────────────────────────────
+const PHASES = ['Contexto', 'Oportunidad', 'Riesgos', 'Validación', 'Brief'];
+let conversationHistory = [];
+let currentPhase = 0;
+let isThinking = false;
+let sessionData = {};
 
 // ── SYSTEM PROMPT ─────────────────────────────────────────────────────────────
-const SYSTEM_PROMPT = `Sos un product manager senior con dominio profundo de Torres (Continuous Discovery Habits), Cagan (Inspired), Seiden (Outcomes Over Output), Fitzpatrick (The Mom Test), Singer (Shape Up), Maurya (Running Lean) y Croll & Yoskovitz (Lean Analytics).
+const SYSTEM_PROMPT = `Eres un product advisor senior especializado en definición de features. Tu rol es una mezcla entre PM senior, product designer y coach de discovery. Trabajas con los frameworks de Torres (Continuous Discovery Habits), Cagan (Inspired), Seiden (Outcomes Over Output), Fitzpatrick (The Mom Test), Singer (Shape Up), Maurya (Running Lean) y Lean Analytics.
 
-Tu trabajo es recibir las respuestas de un PM a un cuestionario estructurado y generar un Feature Brief con criterio propio. No transcribís las respuestas — las evaluás, las tensás donde es necesario, y producís un documento que sirva como base real para tomar decisiones de producto. Escribís en español.
+Tu objetivo es ayudar a quien define una feature a pensar con claridad, detectar huecos en el razonamiento, proponer perspectivas que no están viendo, y construir progresivamente un Feature Brief de calidad.
 
-## Criterio de calidad
+## Cómo funciona la conversación
 
-**Outcomes:** Un outcome válido describe un cambio observable en el comportamiento del usuario y una métrica que lo captura. Formato esperado: "[Quién] hará [comportamiento] lo que resultará en [métrica]." Si el outcome describe lo que se construirá en lugar de lo que cambiará en el usuario, es un output — señalalo como advertencia.
+La conversación tiene 5 fases naturales. No las anuncies explícitamente. Navega de una a la siguiente cuando tengas suficiente información:
 
-**Supuestos críticos:** Un supuesto válido es específico y falseable. Si es falso, la solución se cae. "Que los usuarios quieran usarlo" no es un supuesto — es una esperanza. Un supuesto válido tiene este nivel de especificidad: "Suponemos que los usuarios entienden el paso 3 sin instrucciones — no lo hemos testeado con nadie externo al equipo."
+1. **Contexto**: Entender qué es la feature, para quién, en qué producto y en qué etapa del producto.
+2. **Oportunidad**: Entender el problema real del usuario. Qué comportamiento actual existe. Si hay evidencia o solo hipótesis.
+3. **Riesgos**: Evaluar los 4 riesgos de Cagan (valor, usabilidad, factibilidad, viabilidad). Identificar cuál es el más crítico.
+4. **Validación**: Ayudar a formular el supuesto crítico, el experimento mínimo y la hipótesis con métrica.
+5. **Brief**: Sintetizar todo en un Feature Brief estructurado.
 
-**Hipótesis:** Una hipótesis válida tiene la estructura "Si hacemos X, entonces Y cambiará en Z." Necesita especificar qué métrica cambia y en cuánto. Sin número no es hipótesis — señalalo.
+## Tu comportamiento
 
-**Coherencia entre secciones:** El supuesto crítico, el experimento y la hipótesis deben atacar el mismo riesgo. Si no están alineados entre sí, es una advertencia. Si el riesgo principal declarado es "valor" pero el experimento descrito es un A/B test de UI, algo no cierra.
+**Haz UNA sola pregunta por mensaje.** Nunca hagas varias preguntas a la vez. Si necesitas más información sobre dos cosas, pregunta primero la más importante.
 
-**Riesgos:** Si el PM declara riesgo bajo en alguna dimensión pero la evidencia de validación es solo una intuición del equipo, eso es una contradicción que hay que señalar.
+**Evalúa en tiempo real.** Si detectas que lo que el usuario llama "outcome" es un output, díselo de forma directa pero constructiva antes de seguir. Ejemplo: "Lo que describes es una feature entregada, no un cambio de comportamiento. ¿Qué haría diferente el usuario después de tener esto?"
 
-**Un brief es genérico cuando:** el outcome podría aplicar a cualquier feature de cualquier producto; el problema no describe una situación real de un usuario en un contexto específico; la hipótesis no tiene números; o los riesgos están todos en bajo sin evidencia que lo respalde.
+**Haz propuestas.** No solo preguntes — también propón. Si puedes inferir un outcome probable, díselo y pregunta si es eso. Si el usuario no tiene claro el experimento, sugiere uno.
 
-## Campos pendientes
+**Usa el Mom Test.** Cuando el usuario describe problemas o comportamientos, verifica que sean reales: "¿Puedes contarme la última vez que un usuario tuvo este problema?" Si la respuesta es hipotética, señálalo.
 
-Cuando un campo llega con el valor "unclear", el PM no tiene respuesta todavía.
-- Nunca inventes contenido ni rellenes con texto plausible.
-- Usá el objeto { "pending": true, "tarea": "..." } donde tarea es una oración concreta y accionable — específica al contexto de esta feature, no genérica. Aplicá el framework correspondiente a ese campo: si el outcome es unclear, la tarea viene de Seiden; si el supuesto es unclear, viene de Torres y Maurya; si la métrica es unclear, viene de Lean Analytics.
+**Tensiona el razonamiento.** Si el usuario declara que el riesgo de valor es bajo sin evidencia, pregunta qué evidencia tienen. Si el problema parece genérico, pide un caso específico.
 
-## Advertencias
+**Sé conciso.** Cada mensaje tuyo tiene máximo 3 párrafos cortos. No hagas listas largas. No escribas manifiestos. Una idea, una pregunta.
 
-Detectá activamente estas condiciones e incluílas en el array advertencias. No las menciones dentro del contenido de los campos — solo en advertencias.
+**Estilo**: directo, inteligente, levemente Socrático. Como un colega senior que respeta al interlocutor pero no le deja pasar respuestas vagas.
 
-Tipos válidos:
-- "output_vs_outcome" — el outcome describe una feature entregada, no un cambio de comportamiento.
-- "supuesto_no_falseable" — el supuesto es una esperanza o está formulado de forma irrefutable.
-- "hipotesis_sin_metrica" — la hipótesis no especifica qué cambia ni en cuánto.
-- "riesgo_contradictorio" — el nivel de riesgo declarado no es consistente con la evidencia disponible.
-- "solucion_prematura" — hay una solución descripta en detalle antes de validar el problema.
-- "desalineacion_validacion" — el supuesto, el experimento y la hipótesis no atacan el mismo riesgo.
-- "otro" — cualquier otro problema de calidad que afecte la utilidad del brief.
+**Idioma**: escribe siempre en español de España. Usa "tú" en lugar de "vos". Nunca uses argentinismos ni latinoamericanismos. El registro es profesional pero cercano.
 
-## Formato de output
+## Formato de respuesta (JSON estricto)
 
-Respondé ÚNICAMENTE con un objeto JSON válido. Sin texto antes ni después. Sin bloques de código markdown. Sin comentarios dentro del JSON. Solo el JSON.
-
-No agregues campos fuera del esquema.
-
-Para los campos con contenido del usuario, escribí el texto en español profesional y claro, fiel al significado original. No agregues información que el usuario no proporcionó — el enriquecimiento va en los campos de síntesis (riesgos.lectura, norte.nota_reformulacion) y en las advertencias.
-
-Esquema exacto:
+Responde SIEMPRE con un objeto JSON. Sin texto fuera del JSON. Sin bloques markdown. Solo el JSON.
 
 {
-  "feature_name": string,
-  "estado": "listo_para_desarrollo" | "discovery_en_curso",
-  "advertencias": [
-    { "campo": string, "tipo": string, "texto": string }
-  ],
-  "contexto": {
-    "etapa": string,
-    "modelo": string,
-    "area": string
-  },
-  "norte": {
-    "outcome_esperado": string | { "pending": true, "tarea": string },
-    "conexion_negocio": string | { "pending": true, "tarea": string },
-    "problema_o_solucion": "problema" | "solucion" | "mixto",
-    "nota_reformulacion": string | null
-  },
-  "oportunidad": {
-    "problema": string | { "pending": true, "tarea": string },
-    "preguntas_investigacion": string,
-    "evidencia_actual": string
-  },
-  "riesgos": {
-    "valor": "bajo" | "medio" | "alto",
-    "usabilidad": "bajo" | "medio" | "alto",
-    "factibilidad": "bajo" | "medio" | "alto",
-    "viabilidad": "bajo" | "medio" | "alto",
-    "riesgo_principal": string | { "pending": true, "tarea": string },
-    "lectura": string
-  },
-  "validacion": {
-    "supuesto_critico": string | { "pending": true, "tarea": string },
-    "experimento_minimo": string | { "pending": true, "tarea": string },
-    "hipotesis": string | { "pending": true, "tarea": string },
-    "criterio_exito": string | { "pending": true, "tarea": string }
-  },
-  "shape": {
-    "appetite": string,
-    "solucion_propuesta": string | { "pending": true, "tarea": string },
-    "fuera_alcance": string | null,
-    "rabbit_holes": string | null
-  },
-  "metricas": {
-    "omtm": string | { "pending": true, "tarea": string },
-    "benchmark": string | { "pending": true, "tarea": string },
-    "vanity_check": string | null
+  "fase": 0 | 1 | 2 | 3 | 4,
+  "tipo": "question" | "insight" | "warning" | "proposal" | "brief",
+  "mensaje": string,
+  "chips": string[] | null,
+  "brief": {
+    "feature": string,
+    "outcome": string | null,
+    "problema": string | null,
+    "riesgo_principal": string | null,
+    "supuesto_critico": string | null,
+    "experimento": string | null,
+    "hipotesis": string | null,
+    "omtm": string | null,
+    "estado": "en_construccion" | "listo"
+  } | null
+}
+
+- fase: la fase actual de la conversación (0-4)
+- tipo: "question" para preguntas, "insight" para observaciones que aportan perspectiva, "warning" para señalar problemas en el razonamiento, "proposal" cuando haces una propuesta concreta, "brief" cuando entregas el brief final
+- mensaje: tu respuesta en texto plano, sin markdown. Máximo 3 párrafos cortos.
+- chips: 2-3 respuestas rápidas que el usuario podría elegir, o null. Solo cuando tenga sentido ofrecer opciones concretas.
+- brief: el estado acumulado del brief. Actualizarlo con cada turno. Incluir solo los campos que ya están definidos (null los que faltan). Cuando tipo es "brief", estado debe ser "listo" y todos los campos principales deben estar completos.
+
+El mensaje debe estar en español. Escribe en segunda persona de tú..`;
+
+// ── API ────────────────────────────────────────────────────────────────────────
+async function callClaude(userMessage) {
+  const key = sessionStorage.getItem('fa_conv_key');
+  conversationHistory.push({ role: 'user', content: userMessage });
+
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'x-api-key': key,
+      'anthropic-version': '2023-06-01',
+      'content-type': 'application/json',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 1024,
+      system: SYSTEM_PROMPT,
+      messages: conversationHistory
+    })
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err?.error?.message || `Error ${res.status}`);
+  }
+
+  const data = await res.json();
+  let text = (data.content?.[0]?.text || '').trim();
+  text = text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '');
+
+  const parsed = JSON.parse(text);
+  conversationHistory.push({ role: 'assistant', content: text });
+  return parsed;
+}
+
+// ── RENDER ─────────────────────────────────────────────────────────────────────
+function renderAgentMessage(response) {
+  const chat = document.getElementById('chatWrap');
+
+  // Update phase indicator
+  currentPhase = response.fase || 0;
+  updatePhase(currentPhase);
+
+  // Update session brief data
+  if (response.brief) sessionData = response.brief;
+
+  const msg = document.createElement('div');
+  msg.className = 'msg msg-agent';
+
+  const tagMap = {
+    question: { label: 'Pregunta', cls: 'tag-question' },
+    insight: { label: 'Insight', cls: 'tag-insight' },
+    warning: { label: 'Atención', cls: 'tag-warning' },
+    proposal: { label: 'Propuesta', cls: 'tag-insight' },
+    brief: { label: 'Feature Brief', cls: 'tag-brief' }
+  };
+  const tag = tagMap[response.tipo] || tagMap.question;
+
+  let bubbleContent = `<div class="insight-tag ${tag.cls}">${tag.label}</div>`;
+
+  // Format message — convert newlines to paragraphs
+  const paragraphs = response.mensaje.split('\n').filter(p => p.trim());
+  bubbleContent += paragraphs.map(p => `<p>${p}</p>`).join('');
+
+  // If brief type, show brief card
+  if (response.tipo === 'brief' && response.brief && response.brief.estado === 'listo') {
+    bubbleContent += renderBriefCard(response.brief);
+  }
+
+  // Chips
+  if (response.chips && response.chips.length > 0) {
+    bubbleContent += '<div class="quick-chips">' +
+      response.chips.map(c => `<button class="chip" onclick="useChip(this)">${c}</button>`).join('') +
+      '</div>';
+  }
+
+  msg.innerHTML = `
+    <div class="msg-avatar msg-avatar-agent">FA</div>
+    <div class="msg-bubble msg-bubble-agent">${bubbleContent}</div>`;
+
+  chat.appendChild(msg);
+  chat.scrollTop = chat.scrollHeight;
+}
+
+function renderBriefCard(brief) {
+  const rows = [
+    { label: 'Feature', value: brief.feature },
+    { label: 'Outcome esperado', value: brief.outcome },
+    { label: 'Problema del usuario', value: brief.problema },
+    { label: 'Riesgo principal', value: brief.riesgo_principal },
+    { label: 'Supuesto crítico', value: brief.supuesto_critico },
+    { label: 'Experimento mínimo', value: brief.experimento },
+    { label: 'Hipótesis', value: brief.hipotesis },
+    { label: 'OMTM', value: brief.omtm },
+  ].filter(r => r.value);
+
+  return `<div class="brief-card">
+    <div class="brief-card-header">
+      Feature Brief
+      <button onclick="downloadBrief()" style="background:none;border:1px solid rgba(200,240,77,0.4);color:var(--accent);border-radius:4px;padding:3px 10px;font-size:10px;cursor:pointer;font-family:'DM Sans',sans-serif;letter-spacing:0.08em;">Descargar MD</button>
+    </div>
+    <div class="brief-card-body">
+      ${rows.map(r => `
+        <div class="brief-row">
+          <div class="brief-label">${r.label}</div>
+          <div class="brief-value highlight">${r.value}</div>
+        </div>`).join('')}
+    </div>
+  </div>`;
+}
+
+function renderUserMessage(text) {
+  const chat = document.getElementById('chatWrap');
+  const msg = document.createElement('div');
+  msg.className = 'msg msg-user';
+  msg.innerHTML = `
+    <div class="msg-avatar msg-avatar-user">Tú</div>
+    <div class="msg-bubble msg-bubble-user"><p>${text.replace(/\n/g, '<br>')}</p></div>`;
+  chat.appendChild(msg);
+  chat.scrollTop = chat.scrollHeight;
+}
+
+function renderTyping() {
+  const chat = document.getElementById('chatWrap');
+  const el = document.createElement('div');
+  el.className = 'msg msg-agent';
+  el.id = 'typingIndicator';
+  el.innerHTML = `
+    <div class="msg-avatar msg-avatar-agent">FA</div>
+    <div class="msg-bubble msg-bubble-agent">
+      <div class="typing">
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+      </div>
+    </div>`;
+  chat.appendChild(el);
+  chat.scrollTop = chat.scrollHeight;
+}
+
+function removeTyping() {
+  document.getElementById('typingIndicator')?.remove();
+}
+
+function renderError(message) {
+  const chat = document.getElementById('chatWrap');
+  const el = document.createElement('div');
+  el.className = 'msg msg-agent';
+  el.style.animationDelay = '0s';
+  el.innerHTML = `
+    <div class="msg-avatar msg-avatar-agent">FA</div>
+    <div class="msg-bubble msg-bubble-agent">
+      <div class="insight-tag tag-warning">Error</div>
+      <p>${message}</p>
+    </div>`;
+  chat.appendChild(el);
+  chat.scrollTop = chat.scrollHeight;
+}
+
+// ── PHASE INDICATOR ───────────────────────────────────────────────────────────
+function updatePhase(phase) {
+  document.getElementById('phaseLabel').textContent = PHASES[phase] || '';
+  for (let i = 0; i < 5; i++) {
+    const dot = document.getElementById(`dot${i}`);
+    if (!dot) continue;
+    dot.className = 'phase-dot' + (i < phase ? ' done' : i === phase ? ' active' : '');
   }
 }
 
-Notas sobre campos específicos:
-- norte.nota_reformulacion: solo cuando problema_o_solucion es "solucion" o "mixto". Una oración que reformula la solución recibida como problema a resolver. null en los demás casos.
-- riesgos.lectura: una oración que sintetiza el perfil de riesgo de la feature — qué combinación presentan los cuatro ejes y qué implica para las decisiones inmediatas. Este campo es tuyo, no del usuario.
-- oportunidad.evidencia_actual: siempre un string con el label legible del nivel de validación — nunca pending.
-- estado: "discovery_en_curso" si hay al menos un campo con pending true. "listo_para_desarrollo" si todos los campos clave tienen contenido.
-- advertencias puede ser [] si no hay ninguna.`;
+// ── INTERACTION ───────────────────────────────────────────────────────────────
+async function sendMessage(text) {
+  if (isThinking) return;
+  const field = document.getElementById('inputField');
+  const message = text || field.value.trim();
+  if (!message) return;
 
-// ── API INTEGRATION ──────────────────────────────────────────────────────────
-function buildPayload(ans) {
-  const POL = { problema: 'Un problema a resolver', solucion: 'Una solución ya definida', mixto: 'Mezcla de ambos' };
-  const fv = v => (!v || v === 'unclear') ? 'pendiente de discovery' : v;
-  const line = (label, val) => val ? `${label}: ${val}\n` : '';
+  field.value = '';
+  field.style.height = 'auto';
 
-  let out = `Feature: ${ans.feature_name || '(sin nombre)'}\n\n`;
-
-  out += `CONTEXTO\n`;
-  out += line('Etapa del producto', EL[ans.etapa]);
-  out += line('Modelo de negocio', ML[ans.modelo]);
-  out += line('Área AARRR', AL[ans.area]);
-
-  out += `\nNORTE (Seiden · Cagan)\n`;
-  out += line('Outcome esperado', fv(ans.outcome));
-  out += line('Conexión con el negocio', fv(ans.negocio));
-  out += line('¿Problema o solución?', POL[ans.problema_o_solucion]);
-
-  out += `\nOPORTUNIDAD (Torres · Fitzpatrick)\n`;
-  out += line('Problema — hipótesis a contrastar', fv(ans.problema_resumen));
-  out += line('Preguntas de investigación', ans.preguntas_investigacion);
-  out += line('Validación actual', EVL[ans.evidencia_actual]);
-
-  out += `\nRIESGOS (Cagan · Maurya)\n`;
-  out += line('Riesgo de valor', ans.riesgo_valor);
-  out += line('Riesgo de usabilidad', ans.riesgo_usabilidad);
-  out += line('Riesgo de factibilidad', ans.riesgo_factibilidad);
-  out += line('Riesgo de viabilidad', ans.riesgo_viabilidad);
-  out += line('Riesgo principal', fv(ans.riesgo_principal));
-
-  out += `\nVALIDACIÓN (Maurya · Torres)\n`;
-  out += line('Supuesto crítico', fv(ans.supuesto_critico));
-  out += line('Experimento mínimo', fv(ans.experimento));
-  out += line('Hipótesis', fv(ans.hipotesis));
-  out += line('Criterio de éxito/fracaso', fv(ans.criterio_exito));
-
-  out += `\nSHAPE (Singer)\n`;
-  out += line('Appetite', APL[ans.appetite]);
-  out += line('Solución propuesta', fv(ans.solucion_propuesta));
-  out += line('Fuera del alcance', ans.fuera_alcance);
-  out += line('Rabbit holes', ans.rabbit_holes);
-
-  out += `\nMÉTRICAS (Lean Analytics · Seiden)\n`;
-  out += line('OMTM', fv(ans.omtm));
-  out += line('Benchmark', fv(ans.benchmark));
-  out += line('Vanity metric a evitar', ans.vanity_check);
-
-  return out.trim();
-}
-
-async function callAPI(payload) {
-  const container = document.getElementById('stageContainer');
-
-  container.innerHTML = '';
-  const loadDiv = document.createElement('div');
-  loadDiv.style.cssText = 'opacity:0;animation:fadeUp 0.5s ease forwards;padding:3rem 0;text-align:center;';
-  loadDiv.innerHTML = `
-    <div style="font-size:14px;color:var(--text-muted);margin-bottom:0.5rem;">Generando brief...</div>
-    <div style="font-size:12px;color:var(--text-dim);">Claude está analizando tus respuestas</div>`;
-  container.appendChild(loadDiv);
-
-  const key = sessionStorage.getItem('fa_api_key');
+  renderUserMessage(message);
+  setThinking(true);
+  renderTyping();
 
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'x-api-key': key,
-        'anthropic-version': '2023-06-01',
-        'content-type': 'application/json',
-        'anthropic-dangerous-direct-browser-access': 'true'
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 4096,
-        system: SYSTEM_PROMPT,
-        messages: [{ role: 'user', content: payload }]
-      })
-    });
-
-    if (!res.ok) {
-      const errData = await res.json().catch(() => ({}));
-      throw new Error(errData?.error?.message || `Error ${res.status} — revisá que la API key sea válida.`);
-    }
-
-    const data = await res.json();
-    let text = (data.content?.[0]?.text || '').trim();
-    text = text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '');
-    return JSON.parse(text);
-
+    const response = await callClaude(message);
+    removeTyping();
+    renderAgentMessage(response);
   } catch (err) {
-    container.innerHTML = '';
-    const errDiv = document.createElement('div');
-    errDiv.style.cssText = 'opacity:0;animation:fadeUp 0.5s ease forwards;';
-
-    const alertBox = document.createElement('div');
-    alertBox.className = 'alert alert-warning';
-    alertBox.style.marginBottom = '1.5rem';
-
-    const title = document.createElement('strong');
-    title.textContent = err instanceof SyntaxError
-      ? 'La API respondió con un formato inesperado. Intentá de nuevo.'
-      : 'No se pudo generar el brief.';
-    alertBox.appendChild(title);
-
-    if (!(err instanceof SyntaxError)) {
-      const detail = document.createElement('div');
-      detail.style.cssText = 'margin-top:4px;font-size:12px;';
-      detail.textContent = err.message;
-      alertBox.appendChild(detail);
-    }
-
-    errDiv.appendChild(alertBox);
-
-    const nav = document.createElement('div');
-    nav.className = 'nav-row';
-    const backBtn = document.createElement('button');
-    backBtn.className = 'btn-back';
-    backBtn.textContent = '← Volver al cuestionario';
-    backBtn.onclick = () => { cs--; cq = STAGES[cs].questions.length - 1; renderProgress(); renderStage(); };
-    nav.appendChild(backBtn);
-    errDiv.appendChild(nav);
-
-    container.appendChild(errDiv);
-    return null;
+    removeTyping();
+    renderError('No pude procesar tu mensaje. Revisá que la API key sea válida e intentá de nuevo.');
+    console.error(err);
+  } finally {
+    setThinking(false);
   }
 }
 
-// ── API KEY ──────────────────────────────────────────────────────────────────
-function renderKeyEntry() {
-  document.querySelector('.progress-wrap').style.visibility = 'hidden';
-  const container = document.getElementById('stageContainer');
-  container.innerHTML = '';
-  const div = document.createElement('div');
-  div.style.cssText = 'opacity:0;animation:fadeUp 0.5s ease forwards;';
-  div.innerHTML = `
-    <div style="margin-bottom:1.5rem">
-      <div class="stage-tag">Configuración</div>
-      <p style="font-size:13px;color:var(--text-muted);line-height:1.6;margin-top:0.5rem">
-        Esta herramienta usa la API de Anthropic para generar el Feature Brief.<br>
-        Tu key se guarda solo en esta sesión del navegador y nunca sale de tu dispositivo.
-      </p>
-    </div>
-    <div style="margin-bottom:1.25rem">
-      <div class="output-label" style="margin-bottom:6px">Anthropic API key</div>
-      <input type="password" id="keyInput" class="text-input"
-        style="height:44px;min-height:0;resize:none;"
-        placeholder="sk-ant-api03-...">
-    </div>
-    <div class="nav-row">
-      <button class="btn-next" onclick="saveKey()">Continuar →</button>
-    </div>
-    <p style="margin-top:1rem;font-size:11px;color:var(--text-dim)">
-      Se borra automáticamente al cerrar la pestaña.
-    </p>`;
-  container.appendChild(div);
-  setTimeout(() => document.getElementById('keyInput')?.focus(), 100);
+function useChip(btn) {
+  // Remove all chips after clicking one
+  const chips = btn.closest('.quick-chips');
+  if (chips) chips.remove();
+  sendMessage(btn.textContent);
 }
 
+function setThinking(val) {
+  isThinking = val;
+  document.getElementById('btnSend').disabled = val;
+  document.getElementById('inputField').disabled = val;
+}
+
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+}
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 140) + 'px';
+}
+
+// ── DOWNLOAD ──────────────────────────────────────────────────────────────────
+function downloadBrief() {
+  const b = sessionData;
+  if (!b || !b.feature) return;
+  const today = new Date().toLocaleDateString('es-ES');
+  const line = (label, val) => val ? `**${label}:** ${val}\n\n` : '';
+  const md =
+`# Feature Brief — ${b.feature}
+**Fecha:** ${today}
+
+---
+
+${line('Outcome esperado', b.outcome)}${line('Problema del usuario', b.problema)}${line('Riesgo principal', b.riesgo_principal)}${line('Supuesto crítico', b.supuesto_critico)}${line('Experimento mínimo', b.experimento)}${line('Hipótesis', b.hipotesis)}${line('OMTM', b.omtm)}
+---
+*Generado con PM Feature Advisor — Torres, Cagan, Seiden, Fitzpatrick, Singer, Maurya, Lean Analytics.*`;
+
+  const blob = new Blob([md], { type: 'text/markdown' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = (b.feature || 'feature').toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'') + '-brief.md';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ── KEY MANAGEMENT ────────────────────────────────────────────────────────────
 function saveKey() {
   const val = document.getElementById('keyInput')?.value?.trim();
   if (!val || !val.startsWith('sk-ant-')) {
     alert('Ingresá una API key válida de Anthropic (empieza con sk-ant-).');
     return;
   }
-  sessionStorage.setItem('fa_api_key', val);
-  document.querySelector('.progress-wrap').style.visibility = 'visible';
-  document.getElementById('forgetKeyWrap').style.display = 'block';
-  renderProgress();
-  renderStage();
+  sessionStorage.setItem('fa_conv_key', val);
+  startSession();
 }
 
 function forgetKey() {
   if (!confirm('¿Borrar la API key de esta sesión?')) return;
-  sessionStorage.removeItem('fa_api_key');
-  document.getElementById('forgetKeyWrap').style.display = 'none';
-  renderKeyEntry();
+  sessionStorage.removeItem('fa_conv_key');
+  document.getElementById('keyScreen').style.display = 'flex';
+  document.getElementById('chatWrap').style.display = 'none';
+  document.getElementById('inputWrap').style.display = 'none';
+  document.getElementById('btnForget').style.display = 'none';
+  document.getElementById('phaseIndicator').style.display = 'none';
+  conversationHistory = [];
+  sessionData = {};
 }
 
-// ── RENDER ───────────────────────────────────────────────────────────────────
-function renderProgress() {
-  const w = document.getElementById('progressStages');
-  w.innerHTML = '';
-  STAGES.forEach((_, i) => {
-    const d = document.createElement('div');
-    d.className = 'progress-stage' + (i < cs ? ' done' : i === cs ? ' active' : '');
-    w.appendChild(d);
-  });
-  document.getElementById('progressLabel').textContent = `Etapa ${cs+1} de ${STAGES.length}`;
-  document.getElementById('progressName').textContent = STAGES[cs]?.tag?.split('—')[1]?.trim() || 'Listo';
-}
+async function startSession() {
+  document.getElementById('keyScreen').style.display = 'none';
+  document.getElementById('chatWrap').style.display = 'flex';
+  document.getElementById('inputWrap').style.display = 'block';
+  document.getElementById('btnForget').style.display = 'block';
+  document.getElementById('phaseIndicator').style.display = 'flex';
 
-function renderStage() {
-  const container = document.getElementById('stageContainer');
-  container.innerHTML = '';
-  if (cs >= STAGES.length) { renderOutput(container); return; }
+  setThinking(true);
+  renderTyping();
 
-  const stage = STAGES[cs], q = stage.questions[cq];
-
-  if (cq === 0) {
-    const sh = document.createElement('div');
-    sh.style.cssText = 'opacity:0;animation:fadeUp 0.5s ease forwards;margin-bottom:1.5rem;';
-    sh.innerHTML = `<div class="stage-tag">${stage.tag}</div>${stage.source ? `<div class="stage-source">Basado en: ${stage.source}</div>` : ''}`;
-    container.appendChild(sh);
-    const hr = document.createElement('hr'); hr.className = 'divider';
-    container.appendChild(hr);
-  }
-
-  const qBlock = document.createElement('div');
-  qBlock.className = 'question-block'; qBlock.style.animationDelay = '0.1s';
-  let inner = `<div class="question-text">${q.text}</div>`;
-  if (q.hint) inner += `<div class="question-hint">${q.hint}</div>`;
-  if (q.alert) inner += `<div class="alert alert-${q.alert.type}">${q.alert.text}</div>`;
-
-  if (q.type === 'options' || q.type === 'options_with_unclear') {
-    inner += '<div class="options">';
-    q.options.forEach(opt => {
-      const sel = ans[q.id] === opt.value ? ' selected' : '';
-      inner += `<button class="option${sel}" onclick="selectOption('${q.id}','${opt.value}',this)">${opt.label}${opt.note?`<span class="option-note">${opt.note}</span>`:''}`;
-      inner += `</button>`;
-    });
-    if (q.type === 'options_with_unclear' || q.discoveryKey) {
-      const selU = ans[q.id] === 'unclear' ? ' selected' : '';
-      inner += `<button class="option option-unclear${selU}" onclick="selectOption('${q.id}','unclear',this)">No lo tengo claro todavía<span class="option-note">El asistente te guiará para resolver este punto antes de continuar</span></button>`;
-    }
-    inner += '</div>';
-  } else if (q.type === 'text_with_suggestions') {
-    const suggs = getSugg(q.id);
-    if (suggs.length > 0) {
-      inner += `<div class="suggestions-label">Sugerencias basadas en tu contexto — pulsa para usar</div><div class="suggestions" id="sugg_${q.id}">`;
-      suggs.forEach((s,i) => { inner += `<button class="suggestion-chip" onclick="useSugg('${q.id}',${i})">${s}</button>`; });
-      inner += '</div>';
-    }
-    if (q.discoveryKey) {
-      inner += `<button class="option option-unclear" style="margin-bottom:10px;width:100%" onclick="showDiscovery('${q.id}','${q.discoveryKey}')">No lo tengo claro todavía<span class="option-note">El asistente te guiará para resolver este punto antes de continuar</span></button>`;
-    }
-    const val = ans[q.id] && ans[q.id] !== 'unclear' ? ans[q.id] : '';
-    inner += `<textarea class="text-input" id="textInput_${q.id}" placeholder="${q.placeholder||''}" oninput="ans['${q.id}']=this.value">${val}</textarea>`;
-  } else {
-    const val = ans[q.id] || '';
-    inner += `<textarea class="text-input" id="textInput_${q.id}" placeholder="${q.placeholder||''}" oninput="ans['${q.id}']=this.value">${val}</textarea>`;
-  }
-
-  qBlock.innerHTML = inner;
-  container.appendChild(qBlock);
-
-  // Discovery box if unclear selected
-  if (ans[q.id] === 'unclear' && q.discoveryKey) {
-    renderDiscoveryBox(container, q.discoveryKey, q.id);
-  }
-
-  const nav = document.createElement('div');
-  nav.className = 'nav-row';
-  nav.style.cssText = 'opacity:0;animation:fadeUp 0.5s 0.15s ease forwards;';
-  const isFirst = cs === 0 && cq === 0;
-  const isLastQ = cq === stage.questions.length - 1;
-  const isLastStage = cs === STAGES.length - 1;
-  const nextLabel = isLastQ && isLastStage ? 'Generar documento' : isLastQ ? 'Siguiente etapa →' : 'Continuar →';
-  nav.innerHTML = `${!isFirst?'<button class="btn-back" onclick="goBack()">← Atrás</button>':''}<button class="btn-next" onclick="goNext()">${nextLabel}</button>`;
-  container.appendChild(nav);
-
-  if (stage.questions.length > 1) {
-    const c = document.createElement('div'); c.className = 'q-counter';
-    c.textContent = `Pregunta ${cq+1} de ${stage.questions.length} en esta etapa`;
-    container.appendChild(c);
+  try {
+    // El primer mensaje del agente inicia la conversación
+    const response = await callClaude('Hola, quiero definir una feature.');
+    removeTyping();
+    renderAgentMessage(response);
+  } catch (err) {
+    removeTyping();
+    renderError('No pude conectar con la API. Revisá tu key e intentá de nuevo.');
+  } finally {
+    setThinking(false);
+    document.getElementById('inputField').focus();
   }
 }
 
-function renderDiscoveryBox(container, key, qid) {
-  const d = DISCOVERY[key];
-  if (!d) return;
-  const box = document.createElement('div');
-  box.className = 'discovery-box'; box.id = `dbox_${qid}`;
-  let inner = `<div class="discovery-box-title">Discovery pendiente — ${d.title}</div>`;
-  inner += `<p>${d.why}</p>`;
-  inner += `<p style="font-size:13px;color:var(--accent);margin-bottom:8px;">¿Cómo resolverlo?</p>`;
-  d.steps.forEach(s => {
-    inner += `<div class="discovery-step"><span class="discovery-step-num">${s.n}.</span><span>${s.t}</span></div>`;
-  });
-  inner += `<div class="discovery-note">${d.note}</div>`;
-  box.innerHTML = inner;
-  container.appendChild(box);
-}
-
-function showDiscovery(qid, key) {
-  ans[qid] = 'unclear';
-  const existing = document.getElementById(`dbox_${qid}`);
-  if (!existing) {
-    const nav = document.querySelector('.nav-row');
-    renderDiscoveryBox(document.getElementById('stageContainer'), key, qid);
-    // Move box before nav
-    const box = document.getElementById(`dbox_${qid}`);
-    if (box && nav) { nav.parentNode.insertBefore(box, nav); }
-  }
-}
-
-function useSugg(qid, idx) {
-  const s = getSugg(qid); const text = s[idx];
-  const ta = document.getElementById(`textInput_${qid}`);
-  if (ta) { ta.value = text; ans[qid] = text; }
-  document.querySelectorAll(`#sugg_${qid} .suggestion-chip`).forEach((c,i) => c.classList.toggle('used', i===idx));
-  // Hide discovery box if visible
-  const box = document.getElementById(`dbox_${qid}`);
-  if (box) box.style.display = 'none';
-}
-
-function selectOption(id, value, el) {
-  ans[id] = value;
-  el.closest('.options').querySelectorAll('.option').forEach(o => o.classList.remove('selected'));
-  el.classList.add('selected');
-  // Show/hide discovery box for option-type questions
-  const q = STAGES[cs].questions[cq];
-  const existing = document.getElementById(`dbox_${id}`);
-  if (value === 'unclear' && q.discoveryKey) {
-    if (!existing) {
-      const nav = document.querySelector('.nav-row');
-      renderDiscoveryBox(document.getElementById('stageContainer'), q.discoveryKey, id);
-      const box = document.getElementById(`dbox_${id}`);
-      if (box && nav) nav.parentNode.insertBefore(box, nav);
-    } else { existing.style.display = 'block'; }
-  } else if (existing) { existing.style.display = 'none'; }
-}
-
-async function goNext() {
-  const stage = STAGES[cs], q = stage.questions[cq];
-  if (q.type === 'options' || q.type === 'options_with_unclear') {
-    if (!ans[q.id]) { alert('Por favor selecciona una opción antes de continuar.'); return; }
-  } else {
-    const val = document.getElementById(`textInput_${q.id}`)?.value?.trim();
-    if (!val && ans[q.id] !== 'unclear') { alert('Por favor escribe o selecciona una respuesta antes de continuar.'); return; }
-    if (val) ans[q.id] = val;
-  }
-  if (cq < stage.questions.length - 1) cq++;
-  else { cs++; cq = 0; }
-  renderProgress();
-  if (cs >= STAGES.length) {
-    const brief = await callAPI(buildPayload(ans));
-    if (brief) renderBriefFromJSON(brief);
-    return;
-  }
-  renderStage();
-  window.scrollTo({top:0, behavior:'smooth'});
-}
-
-function goBack() {
-  if (cq > 0) cq--;
-  else if (cs > 0) { cs--; cq = STAGES[cs].questions.length - 1; }
-  renderProgress(); renderStage();
-  window.scrollTo({top:0, behavior:'smooth'});
-}
-
-// ── OUTPUT ───────────────────────────────────────────────────────────────────
-function getCtxMetrics() {
-  const metrics = [], e=ans.etapa, m=ans.modelo, ar=ans.area;
-  if (e==='empathy') metrics.push('Señales cualitativas — ¿el problema duele lo suficiente?');
-  if (e==='stickiness'&&m==='mobile') { metrics.push('Retención día 1 (25–40%)'); metrics.push('Retención día 7 (10–20%)'); metrics.push('Ratio DAU/MAU (30/10/10)'); }
-  if (e==='stickiness'&&m==='saas') { metrics.push('Churn mensual (<2% excelente, >5% crítico)'); metrics.push('Engagement por cohorte'); }
-  if (e==='revenue') metrics.push('CAC / CLV — CAC debe ser < 1/3 del CLV');
-  if (e==='revenue'&&m==='saas') metrics.push('MRR — adiciones netas');
-  if (e==='revenue'&&m==='mobile') { metrics.push('ARPU'); metrics.push('% usuarios que pagan'); }
-  if (e==='virality') metrics.push('Coeficiente viral (>0.75 bueno, >1.0 óptimo)');
-  if (ar==='activation') { metrics.push('Tasa de activación — % que completan la acción clave'); metrics.push('Tiempo hasta el primer valor percibido'); }
-  if (ar==='retention') metrics.push('Retención por cohorte día 1 / 7 / 30');
-  if (ar==='revenue') { metrics.push('Tasa de conversión a pago'); metrics.push('ARPU'); }
-  if (ar==='referral') { metrics.push('Coeficiente viral'); metrics.push('% usuarios que refieren'); }
-  if (!metrics.length) metrics.push('Define la OMTM según la pregunta más importante de tu etapa actual');
-  return [...new Set(metrics)];
-}
-
-const EL={empathy:'Empatía',stickiness:'Adhesión',virality:'Viralidad',revenue:'Ingresos',scale:'Escala'};
-const ML={saas:'SaaS / suscripción',mobile:'Mobile app / freemium',ecommerce:'E-commerce',marketplace:'Marketplace',media:'Media / contenido',ugc:'UGC'};
-const AL={acquisition:'Adquisición',activation:'Activación',retention:'Retención',revenue:'Revenue',referral:'Referral'};
-const APL={small:'Small batch (1–2 semanas)',medium:'Medium batch (3–4 semanas)',big:'Big batch (6 semanas)'};
-const EVL={validada:'✓ Ya hablé con usuarios y vi el problema repetirse',parcial:'Señales indirectas — falta contrastar con usuarios',hipotesis:'Intuición del equipo — punto de partida para investigar'};
-
-function fmtVal(key) {
-  const v = ans[key];
-  if (!v || v === 'unclear') {
-    const dk = STAGES.flatMap(s=>s.questions).find(q=>q.id===key)?.discoveryKey;
-    const d = dk && DISCOVERY[dk];
-    return `<div class="pending-badge">Discovery pendiente</div>${d?`<div class="pending-task">${d.steps[0].t}</div>`:''}`;
-  }
-  return `<div>${v}</div>`;
-}
-
-function rb(val) {
-  if (val==='bajo') return '<span class="risk-badge risk-low">Bajo</span>';
-  if (val==='medio') return '<span class="risk-badge risk-med">Medio</span>';
-  if (val==='alto') return '<span class="risk-badge risk-high">Alto</span>';
-  return '<span class="risk-badge" style="color:var(--text-dim);border-color:var(--border)">Sin evaluar</span>';
-}
-
-function getPendingTasks() {
-  const tasks = [];
-  STAGES.flatMap(s=>s.questions).forEach(q => {
-    if (ans[q.id] === 'unclear' && q.discoveryKey) {
-      const d = DISCOVERY[q.discoveryKey];
-      if (d) tasks.push({ question: q.text, title: d.title, steps: d.steps });
-    }
-  });
-  return tasks;
-}
-
-function renderOutput(container) {
-  const today = new Date().toLocaleDateString('es-ES',{year:'numeric',month:'long',day:'numeric'});
-  const cm = getCtxMetrics();
-  const pending = getPendingTasks();
-  const div = document.createElement('div'); div.className='output'; div.id='outputDoc';
-
-  let pendingSection = '';
-  if (pending.length > 0) {
-    pendingSection = `<div class="output-section" style="border-color:rgba(255,201,107,0.3)">
-      <div class="output-section-header" style="background:rgba(255,201,107,0.06)">
-        <span class="output-section-tag" style="color:var(--warning)">Discovery</span>
-        <span class="output-section-title">Trabajo pendiente antes de construir</span>
-      </div>
-      <div class="output-section-body">
-        ${pending.map((p,i) => `
-          <div class="output-row">
-            <div class="output-label">${p.title}</div>
-            <div style="font-size:13px;color:var(--text-muted);margin-bottom:4px">${p.question}</div>
-            ${p.steps.map(s=>`<div class="pending-task">${s.n}. ${s.t}</div>`).join('')}
-          </div>
-        `).join('')}
-      </div>
-    </div>`;
-  }
-
-  div.innerHTML = `
-    <div style="margin-bottom:2rem">
-      <div class="stage-tag">Feature Brief</div>
-      <div class="output-title">${ans.feature_name||'Feature Brief'}</div>
-      <div class="output-meta">${today}${pending.length>0?' · '+pending.length+' punto(s) de discovery pendiente':''}</div>
-    </div>
-    ${pendingSection}
-    <div class="output-section">
-      <div class="output-section-header"><span class="output-section-tag">01</span><span class="output-section-title">Contexto</span></div>
-      <div class="output-section-body">
-        <div class="output-row"><div class="output-label">Etapa</div><div>${EL[ans.etapa]||ans.etapa}</div></div>
-        <div class="output-row"><div class="output-label">Modelo</div><div>${ML[ans.modelo]||ans.modelo}</div></div>
-        <div class="output-row"><div class="output-label">Área</div><div>${AL[ans.area]||ans.area}</div></div>
-      </div>
-    </div>
-    <div class="output-section">
-      <div class="output-section-header"><span class="output-section-tag">02</span><span class="output-section-title">Norte</span><span class="output-section-source">Seiden · Cagan</span></div>
-      <div class="output-section-body">
-        <div class="output-row"><div class="output-label">Outcome esperado</div>${fmtVal('outcome')}</div>
-        <div class="output-row"><div class="output-label">Conexión con negocio</div>${fmtVal('negocio')}</div>
-        <div class="output-row"><div class="output-label">¿Problema o solución?</div><div>${ans.problema_o_solucion==='problema'?'✓ Problema a resolver':ans.problema_o_solucion==='solucion'?'⚠ Solución — requiere reformulación':'Mixto'}</div></div>
-      </div>
-    </div>
-    <div class="output-section">
-      <div class="output-section-header"><span class="output-section-tag">03</span><span class="output-section-title">Oportunidad — punto de partida para investigar</span><span class="output-section-source">Torres · Fitzpatrick</span></div>
-      <div class="output-section-body">
-        <div class="output-row"><div class="output-label">Problema (hipótesis a contrastar)</div>${fmtVal('problema_resumen')}</div>
-        <div class="output-row"><div class="output-label">Preguntas para investigar</div>${fmtVal('preguntas_investigacion')}</div>
-        <div class="output-row"><div class="output-label">Validación actual de la hipótesis</div><div>${EVL[ans.evidencia_actual]||'Sin evaluar'}</div></div>
-      </div>
-    </div>
-    <div class="output-section">
-      <div class="output-section-header"><span class="output-section-tag">04</span><span class="output-section-title">Riesgos</span><span class="output-section-source">Cagan · Maurya</span></div>
-      <div class="output-section-body">
-        <div class="risk-row"><span>Valor — ¿lo querrán?</span>${rb(ans.riesgo_valor)}</div>
-        <div class="risk-row"><span>Usabilidad — ¿sabrán usarlo?</span>${rb(ans.riesgo_usabilidad)}</div>
-        <div class="risk-row"><span>Factibilidad — ¿podemos construirlo?</span>${rb(ans.riesgo_factibilidad)}</div>
-        <div class="risk-row"><span>Viabilidad — ¿tiene sentido ahora?</span>${rb(ans.riesgo_viabilidad)}</div>
-        <div class="output-row" style="margin-top:12px"><div class="output-label">Riesgo principal</div>${fmtVal('riesgo_principal')}</div>
-      </div>
-    </div>
-    <div class="output-section">
-      <div class="output-section-header"><span class="output-section-tag">05</span><span class="output-section-title">Validación</span><span class="output-section-source">Maurya · Torres</span></div>
-      <div class="output-section-body">
-        <div class="output-row"><div class="output-label">Supuesto crítico</div>${fmtVal('supuesto_critico')}</div>
-        <div class="output-row"><div class="output-label">Experimento mínimo</div>${fmtVal('experimento')}</div>
-        <div class="output-row"><div class="output-label">Hipótesis</div>${fmtVal('hipotesis')}</div>
-        <div class="output-row"><div class="output-label">Criterio éxito / fracaso</div>${fmtVal('criterio_exito')}</div>
-      </div>
-    </div>
-    <div class="output-section">
-      <div class="output-section-header"><span class="output-section-tag">06</span><span class="output-section-title">Shape — el pitch</span><span class="output-section-source">Singer</span></div>
-      <div class="output-section-body">
-        <div class="output-row"><div class="output-label">Appetite</div><div>${APL[ans.appetite]||ans.appetite}</div></div>
-        <div class="output-row"><div class="output-label">Solución propuesta</div>${fmtVal('solucion_propuesta')}</div>
-        <div class="output-row"><div class="output-label">Fuera del alcance</div><div>${ans.fuera_alcance||'—'}</div></div>
-        <div class="output-row"><div class="output-label">Rabbit holes</div><div>${ans.rabbit_holes||'—'}</div></div>
-      </div>
-    </div>
-    <div class="output-section">
-      <div class="output-section-header"><span class="output-section-tag">07</span><span class="output-section-title">Métricas</span><span class="output-section-source">Lean Analytics · Seiden</span></div>
-      <div class="output-section-body">
-        <div class="output-row"><div class="output-label">OMTM</div>${fmtVal('omtm')}</div>
-        <div class="output-row"><div class="output-label">Benchmark</div>${fmtVal('benchmark')}</div>
-        <div class="output-row"><div class="output-label">Vanity metric a evitar</div><div>${ans.vanity_check||'—'}</div></div>
-        <div class="output-row"><div class="output-label">Métricas recomendadas — ${EL[ans.etapa]} + ${ML[ans.modelo]}</div><div style="margin-top:6px">${cm.map(m=>`<span class="metric-chip">${m}</span>`).join('')}</div></div>
-      </div>
-    </div>
-    <div class="download-row">
-      <button class="btn-download" onclick="downloadDoc()">Descargar como Markdown</button>
-      <button class="btn-restart" onclick="restart()">Nueva feature</button>
-    </div>`;
-  container.appendChild(div);
-}
-
-function downloadDoc() {
-  const today = new Date().toLocaleDateString('es-ES');
-  const cm = getCtxMetrics();
-  const pending = getPendingTasks();
-  function fv(key) {
-    const v = ans[key];
-    if (!v || v==='unclear') {
-      const dk = STAGES.flatMap(s=>s.questions).find(q=>q.id===key)?.discoveryKey;
-      const d = dk && DISCOVERY[dk];
-      return d ? `⚠ Discovery pendiente: ${d.steps[0].t}` : '⚠ Pendiente';
-    }
-    return v;
-  }
-  const pendingMd = pending.length > 0 ? `## Discovery pendiente\n\n${pending.map(p=>`### ${p.title}\n**Pregunta:** ${p.question}\n${p.steps.map(s=>`${s.n}. ${s.t}`).join('\n')}`).join('\n\n')}\n\n---\n\n` : '';
-  const md = `# Feature Brief — ${ans.feature_name||'Feature'}
-
-**Fecha:** ${today}  
-**Estado:** ${pending.length>0?'Discovery en curso':'Listo para desarrollo'}
-
----
-
-${pendingMd}## 01 — Contexto
-
-- **Etapa:** ${EL[ans.etapa]||ans.etapa}
-- **Modelo:** ${ML[ans.modelo]||ans.modelo}
-- **Área:** ${AL[ans.area]||ans.area}
-
----
-
-## 02 — Norte
-*Seiden · Cagan*
-
-**Outcome esperado:**  
-${fv('outcome')}
-
-**Conexión con negocio:**  
-${fv('negocio')}
-
-**¿Problema o solución?** ${ans.problema_o_solucion}
-
----
-
-## 03 — Oportunidad — punto de partida para investigar
-*Torres · Fitzpatrick*
-
-**Problema (hipótesis a contrastar):**
-${fv('problema_resumen')}
-
-**Preguntas para investigar:**
-${fv('preguntas_investigacion')}
-
-**Validación actual de la hipótesis:** ${EVL[ans.evidencia_actual]||'Sin evaluar'}
-
----
-
-## 04 — Riesgos
-*Cagan · Maurya*
-
-| Riesgo | Nivel |
-|--------|-------|
-| Valor | ${ans.riesgo_valor||'Sin evaluar'} |
-| Usabilidad | ${ans.riesgo_usabilidad||'Sin evaluar'} |
-| Factibilidad | ${ans.riesgo_factibilidad||'Sin evaluar'} |
-| Viabilidad | ${ans.riesgo_viabilidad||'Sin evaluar'} |
-
-**Riesgo principal:** ${fv('riesgo_principal')}
-
----
-
-## 05 — Validación
-*Maurya · Torres*
-
-**Supuesto crítico:**  
-${fv('supuesto_critico')}
-
-**Experimento mínimo:**  
-${fv('experimento')}
-
-**Hipótesis:**  
-${fv('hipotesis')}
-
-**Criterio éxito / fracaso:**  
-${fv('criterio_exito')}
-
----
-
-## 06 — Shape
-*Singer (Shape Up)*
-
-**Appetite:** ${APL[ans.appetite]||ans.appetite}
-
-**Solución propuesta:**  
-${fv('solucion_propuesta')}
-
-**Fuera del alcance:**  
-${ans.fuera_alcance||'—'}
-
-**Rabbit holes:**  
-${ans.rabbit_holes||'—'}
-
----
-
-## 07 — Métricas
-*Lean Analytics · Seiden*
-
-**OMTM:**  
-${fv('omtm')}
-
-**Benchmark:**  
-${fv('benchmark')}
-
-**Vanity metric a evitar:**  
-${ans.vanity_check||'—'}
-
-**Métricas recomendadas (${EL[ans.etapa]} + ${ML[ans.modelo]}):**
-${cm.map(m=>`- ${m}`).join('\n')}
-
----
-*PM Feature Advisor — basado en Torres, Cagan, Seiden, Fitzpatrick, Maurya, Singer y Lean Analytics.*`;
-
-  const blob = new Blob([md],{type:'text/markdown'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href=url; a.download=(ans.feature_name||'feature').toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'')+'-brief.md';
-  a.click(); URL.revokeObjectURL(url);
-}
-
-function pendingFromBrief(brief) {
-  const LABELS = {
-    outcome_esperado:'Outcome esperado', conexion_negocio:'Conexión con el negocio',
-    problema:'Problema — hipótesis a contrastar', riesgo_principal:'Riesgo principal',
-    supuesto_critico:'Supuesto crítico', experimento_minimo:'Experimento mínimo',
-    hipotesis:'Hipótesis', criterio_exito:'Criterio de éxito/fracaso',
-    solucion_propuesta:'Solución propuesta', omtm:'OMTM', benchmark:'Benchmark'
-  };
-  const tasks = [];
-  ['norte','oportunidad','riesgos','validacion','shape','metricas'].forEach(sec => {
-    Object.entries(brief[sec] || {}).forEach(([k, v]) => {
-      if (v && typeof v === 'object' && v.pending)
-        tasks.push({ label: LABELS[k] || k, tarea: v.tarea });
-    });
-  });
-  return tasks;
-}
-
-function renderBriefFromJSON(brief) {
-  lastBrief = brief;
-  const container = document.getElementById('stageContainer');
-  const today = new Date().toLocaleDateString('es-ES',{year:'numeric',month:'long',day:'numeric'});
-  const cm = getCtxMetrics();
-  const pending = pendingFromBrief(brief);
-
-  const fj = val => {
-    if (val && typeof val === 'object' && val.pending)
-      return `<div class="pending-badge">Discovery pendiente</div>${val.tarea?`<div class="pending-task">${val.tarea}</div>`:''}`;
-    return `<div>${val||'—'}</div>`;
-  };
-
-  const pol = brief.norte?.problema_o_solucion;
-  const polLabel = pol==='problema' ? '✓ Problema a resolver'
-                 : pol==='solucion' ? '⚠ Solución — requiere reformulación' : 'Mixto';
-  const notaRef = brief.norte?.nota_reformulacion
-    ? `<div style="margin-top:8px;font-size:13px;color:var(--text-muted);font-style:italic">${brief.norte.nota_reformulacion}</div>`
-    : '';
-
-  const advertSection = brief.advertencias?.length > 0 ? `
-    <div class="output-section" style="border-color:rgba(255,107,107,0.3)">
-      <div class="output-section-header" style="background:rgba(255,107,107,0.06)">
-        <span class="output-section-tag" style="color:var(--danger)">Revisión</span>
-        <span class="output-section-title">Advertencias de calidad</span>
-      </div>
-      <div class="output-section-body">
-        ${brief.advertencias.map(a=>`
-          <div class="output-row">
-            <div class="output-label">${a.campo}</div>
-            <div class="alert alert-warning" style="margin:0">${a.texto}</div>
-          </div>`).join('')}
-      </div>
-    </div>` : '';
-
-  const pendingSection = pending.length > 0 ? `
-    <div class="output-section" style="border-color:rgba(255,201,107,0.3)">
-      <div class="output-section-header" style="background:rgba(255,201,107,0.06)">
-        <span class="output-section-tag" style="color:var(--warning)">Discovery</span>
-        <span class="output-section-title">Trabajo pendiente antes de construir</span>
-      </div>
-      <div class="output-section-body">
-        ${pending.map(p=>`
-          <div class="output-row">
-            <div class="output-label">${p.label}</div>
-            <div class="pending-task">${p.tarea}</div>
-          </div>`).join('')}
-      </div>
-    </div>` : '';
-
-  const div = document.createElement('div');
-  div.className = 'output'; div.id = 'outputDoc';
-  div.innerHTML = `
-    <div style="margin-bottom:2rem">
-      <div class="stage-tag">Feature Brief</div>
-      <div class="output-title">${brief.feature_name||'Feature Brief'}</div>
-      <div class="output-meta">${today}${pending.length>0?' · '+pending.length+' punto(s) de discovery pendiente':''}</div>
-    </div>
-    ${advertSection}${pendingSection}
-    <div class="output-section">
-      <div class="output-section-header"><span class="output-section-tag">01</span><span class="output-section-title">Contexto</span></div>
-      <div class="output-section-body">
-        <div class="output-row"><div class="output-label">Etapa</div><div>${brief.contexto?.etapa||'—'}</div></div>
-        <div class="output-row"><div class="output-label">Modelo</div><div>${brief.contexto?.modelo||'—'}</div></div>
-        <div class="output-row"><div class="output-label">Área</div><div>${brief.contexto?.area||'—'}</div></div>
-      </div>
-    </div>
-    <div class="output-section">
-      <div class="output-section-header"><span class="output-section-tag">02</span><span class="output-section-title">Norte</span><span class="output-section-source">Seiden · Cagan</span></div>
-      <div class="output-section-body">
-        <div class="output-row"><div class="output-label">Outcome esperado</div>${fj(brief.norte?.outcome_esperado)}</div>
-        <div class="output-row"><div class="output-label">Conexión con negocio</div>${fj(brief.norte?.conexion_negocio)}</div>
-        <div class="output-row"><div class="output-label">¿Problema o solución?</div><div>${polLabel}${notaRef}</div></div>
-      </div>
-    </div>
-    <div class="output-section">
-      <div class="output-section-header"><span class="output-section-tag">03</span><span class="output-section-title">Oportunidad — punto de partida para investigar</span><span class="output-section-source">Torres · Fitzpatrick</span></div>
-      <div class="output-section-body">
-        <div class="output-row"><div class="output-label">Problema (hipótesis a contrastar)</div>${fj(brief.oportunidad?.problema)}</div>
-        <div class="output-row"><div class="output-label">Preguntas para investigar</div><div>${brief.oportunidad?.preguntas_investigacion||'—'}</div></div>
-        <div class="output-row"><div class="output-label">Validación actual de la hipótesis</div><div>${brief.oportunidad?.evidencia_actual||'—'}</div></div>
-      </div>
-    </div>
-    <div class="output-section">
-      <div class="output-section-header"><span class="output-section-tag">04</span><span class="output-section-title">Riesgos</span><span class="output-section-source">Cagan · Maurya</span></div>
-      <div class="output-section-body">
-        <div class="risk-row"><span>Valor — ¿lo querrán?</span>${rb(brief.riesgos?.valor)}</div>
-        <div class="risk-row"><span>Usabilidad — ¿sabrán usarlo?</span>${rb(brief.riesgos?.usabilidad)}</div>
-        <div class="risk-row"><span>Factibilidad — ¿podemos construirlo?</span>${rb(brief.riesgos?.factibilidad)}</div>
-        <div class="risk-row"><span>Viabilidad — ¿tiene sentido ahora?</span>${rb(brief.riesgos?.viabilidad)}</div>
-        <div class="output-row" style="margin-top:12px"><div class="output-label">Riesgo principal</div>${fj(brief.riesgos?.riesgo_principal)}</div>
-        ${brief.riesgos?.lectura?`<div class="output-row"><div class="output-label">Lectura del perfil</div><div style="font-size:13px;color:var(--text-muted);font-style:italic">${brief.riesgos.lectura}</div></div>`:''}
-      </div>
-    </div>
-    <div class="output-section">
-      <div class="output-section-header"><span class="output-section-tag">05</span><span class="output-section-title">Validación</span><span class="output-section-source">Maurya · Torres</span></div>
-      <div class="output-section-body">
-        <div class="output-row"><div class="output-label">Supuesto crítico</div>${fj(brief.validacion?.supuesto_critico)}</div>
-        <div class="output-row"><div class="output-label">Experimento mínimo</div>${fj(brief.validacion?.experimento_minimo)}</div>
-        <div class="output-row"><div class="output-label">Hipótesis</div>${fj(brief.validacion?.hipotesis)}</div>
-        <div class="output-row"><div class="output-label">Criterio éxito / fracaso</div>${fj(brief.validacion?.criterio_exito)}</div>
-      </div>
-    </div>
-    <div class="output-section">
-      <div class="output-section-header"><span class="output-section-tag">06</span><span class="output-section-title">Shape — el pitch</span><span class="output-section-source">Singer</span></div>
-      <div class="output-section-body">
-        <div class="output-row"><div class="output-label">Appetite</div><div>${brief.shape?.appetite||'—'}</div></div>
-        <div class="output-row"><div class="output-label">Solución propuesta</div>${fj(brief.shape?.solucion_propuesta)}</div>
-        <div class="output-row"><div class="output-label">Fuera del alcance</div><div>${brief.shape?.fuera_alcance||'—'}</div></div>
-        <div class="output-row"><div class="output-label">Rabbit holes</div><div>${brief.shape?.rabbit_holes||'—'}</div></div>
-      </div>
-    </div>
-    <div class="output-section">
-      <div class="output-section-header"><span class="output-section-tag">07</span><span class="output-section-title">Métricas</span><span class="output-section-source">Lean Analytics · Seiden</span></div>
-      <div class="output-section-body">
-        <div class="output-row"><div class="output-label">OMTM</div>${fj(brief.metricas?.omtm)}</div>
-        <div class="output-row"><div class="output-label">Benchmark</div>${fj(brief.metricas?.benchmark)}</div>
-        <div class="output-row"><div class="output-label">Vanity metric a evitar</div><div>${brief.metricas?.vanity_check||'—'}</div></div>
-        <div class="output-row"><div class="output-label">Métricas recomendadas — ${brief.contexto?.etapa} + ${brief.contexto?.modelo}</div><div style="margin-top:6px">${cm.map(m=>`<span class="metric-chip">${m}</span>`).join('')}</div></div>
-      </div>
-    </div>
-    <div class="download-row">
-      <button class="btn-download" onclick="downloadBriefDoc()">Descargar como Markdown</button>
-      <button class="btn-restart" onclick="restart()">Nueva feature</button>
-    </div>`;
-
-  container.innerHTML = '';
-  container.appendChild(div);
-  window.scrollTo({top:0, behavior:'smooth'});
-}
-
-function downloadBriefDoc() {
-  if (!lastBrief) return;
-  const b = lastBrief;
-  const today = new Date().toLocaleDateString('es-ES');
-  const cm = getCtxMetrics();
-  const fmd = val => (val && typeof val === 'object' && val.pending)
-    ? `⚠ Discovery pendiente: ${val.tarea||''}` : (val||'—');
-  const pol = b.norte?.problema_o_solucion;
-  const polMd = pol==='problema'?'Problema a resolver':pol==='solucion'?'Solución — requiere reformulación':'Mixto';
-  const notaRefMd = b.norte?.nota_reformulacion ? `\n*Reformulación: ${b.norte.nota_reformulacion}*` : '';
-  const advertMd = b.advertencias?.length > 0
-    ? `## Advertencias de calidad\n\n${b.advertencias.map(a=>`- **${a.campo}:** ${a.texto}`).join('\n')}\n\n---\n\n` : '';
-
-  const md =
-`# Feature Brief — ${b.feature_name||'Feature'}
-
-**Fecha:** ${today}
-**Estado:** ${b.estado==='listo_para_desarrollo'?'Listo para desarrollo':'Discovery en curso'}
-
----
-
-${advertMd}## 01 — Contexto
-
-- **Etapa:** ${b.contexto?.etapa||'—'}
-- **Modelo:** ${b.contexto?.modelo||'—'}
-- **Área:** ${b.contexto?.area||'—'}
-
----
-
-## 02 — Norte
-*Seiden · Cagan*
-
-**Outcome esperado:**
-${fmd(b.norte?.outcome_esperado)}
-
-**Conexión con el negocio:**
-${fmd(b.norte?.conexion_negocio)}
-
-**¿Problema o solución?** ${polMd}${notaRefMd}
-
----
-
-## 03 — Oportunidad
-*Torres · Fitzpatrick*
-
-**Problema (hipótesis a contrastar):**
-${fmd(b.oportunidad?.problema)}
-
-**Preguntas para investigar:**
-${b.oportunidad?.preguntas_investigacion||'—'}
-
-**Validación actual de la hipótesis:** ${b.oportunidad?.evidencia_actual||'—'}
-
----
-
-## 04 — Riesgos
-*Cagan · Maurya*
-
-| Riesgo | Nivel |
-|--------|-------|
-| Valor | ${b.riesgos?.valor||'—'} |
-| Usabilidad | ${b.riesgos?.usabilidad||'—'} |
-| Factibilidad | ${b.riesgos?.factibilidad||'—'} |
-| Viabilidad | ${b.riesgos?.viabilidad||'—'} |
-
-**Riesgo principal:** ${fmd(b.riesgos?.riesgo_principal)}
-
-${b.riesgos?.lectura?`*${b.riesgos.lectura}*`:''}
-
----
-
-## 05 — Validación
-*Maurya · Torres*
-
-**Supuesto crítico:**
-${fmd(b.validacion?.supuesto_critico)}
-
-**Experimento mínimo:**
-${fmd(b.validacion?.experimento_minimo)}
-
-**Hipótesis:**
-${fmd(b.validacion?.hipotesis)}
-
-**Criterio éxito / fracaso:**
-${fmd(b.validacion?.criterio_exito)}
-
----
-
-## 06 — Shape
-*Singer (Shape Up)*
-
-**Appetite:** ${b.shape?.appetite||'—'}
-
-**Solución propuesta:**
-${fmd(b.shape?.solucion_propuesta)}
-
-**Fuera del alcance:**
-${b.shape?.fuera_alcance||'—'}
-
-**Rabbit holes:**
-${b.shape?.rabbit_holes||'—'}
-
----
-
-## 07 — Métricas
-*Lean Analytics · Seiden*
-
-**OMTM:**
-${fmd(b.metricas?.omtm)}
-
-**Benchmark:**
-${fmd(b.metricas?.benchmark)}
-
-**Vanity metric a evitar:**
-${b.metricas?.vanity_check||'—'}
-
-**Métricas recomendadas (${b.contexto?.etapa} + ${b.contexto?.modelo}):**
-${cm.map(m=>`- ${m}`).join('\n')}
-
----
-*PM Feature Advisor — basado en Torres, Cagan, Seiden, Fitzpatrick, Maurya, Singer y Lean Analytics.*`;
-
-  const blob = new Blob([md],{type:'text/markdown'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href=url;
-  a.download=(b.feature_name||'feature').toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'')+'-brief.md';
-  a.click(); URL.revokeObjectURL(url);
-}
-
-function restart() {
-  Object.keys(ans).forEach(k=>delete ans[k]);
-  lastBrief = null;
-  cs=0; cq=0; renderProgress(); renderStage();
-  window.scrollTo({top:0,behavior:'smooth'});
-}
-
-if (sessionStorage.getItem('fa_api_key')) {
-  document.getElementById('forgetKeyWrap').style.display = 'block';
-  renderProgress();
-  renderStage();
-} else {
-  renderKeyEntry();
+// ── INIT ──────────────────────────────────────────────────────────────────────
+if (sessionStorage.getItem('fa_conv_key')) {
+  startSession();
 }
 </script>
 </body>
